@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Block.v2 Online</title>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCsWUVcot8Hc70na3PJm84i0xc1_rIb8KI",
+    authDomain: "blockv2online.firebaseapp.com",
+    projectId: "blockv2online",
+    storageBucket: "blockv2online.firebasestorage.app",
+    messagingSenderId: "434258453142",
+    appId: "1:434258453142:web:b5045f47292375e1c4d8b7",
+    measurementId: "G-QZM9RJ8XE3"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  window.auth = auth;
+  window.db = db;
+</script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0d0d; --surface: #141414; --border: #2a2a2a;
+    --text: #f0ede8; --muted: #666; --red: #e03030;
+    --red-glow: rgba(224,48,48,0.35); --red-dim: #3a1010; --tag: #1e1e1e;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 3rem 1.5rem 4rem; }
+
+  .screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; }
+  .screen.hidden { display: none; }
+
+  .card { background: var(--surface); border: 1px solid var(--red); border-radius: 14px; box-shadow: 0 0 18px var(--red-glow), 0 0 50px rgba(224,48,48,0.15); padding: 2rem 2.5rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; min-width: 300px; }
+  .card-icon { font-size: 2rem; }
+  .card h2 { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: var(--muted); font-weight: 400; }
+
+  .field { width: 100%; padding: 0.65rem 1rem; background: #0f0f0f; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.95rem; outline: none; transition: border-color 0.15s; }
+  .field:focus { border-color: var(--red); box-shadow: 0 0 8px var(--red-glow); }
+  .field::placeholder { color: var(--muted); }
+
+  .btn-red { width: 100%; padding: 0.65rem; background: var(--red); color: white; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; cursor: pointer; transition: all 0.15s; box-shadow: 0 0 10px var(--red-glow); }
+  .btn-red:hover { opacity: 0.85; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); width: 100%; padding: 0.55rem; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
+  .btn-ghost:hover { border-color: var(--red); color: var(--text); }
+
+  .card-err { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--red); min-height: 1rem; text-align: center; }
+  .card-ok  { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: #22c55e; min-height: 1rem; text-align: center; }
+
+  #main { display: none; width: 100%; flex-direction: column; align-items: center; }
+  .hub-title { font-family: 'DM Mono', monospace; font-size: 1.25rem; font-weight: 500; color: var(--text); letter-spacing: -0.02em; margin-bottom: 1.2rem; text-align: center; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 720px; margin-bottom: 1rem; }
+  .user-pill { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--muted); background: var(--tag); border: 1px solid var(--border); padding: 0.3rem 0.8rem; border-radius: 99px; display: flex; align-items: center; gap: 0.5rem; }
+  .logout-btn { background: transparent; border: none; color: var(--muted); font-size: 0.78rem; cursor: pointer; font-family: 'DM Mono', monospace; transition: color 0.15s; }
+  .logout-btn:hover { color: var(--red); }
+
+  .box { width: 100%; max-width: 720px; background: var(--surface); border: 1px solid var(--red); border-radius: 16px; box-shadow: 0 0 18px var(--red-glow), 0 0 50px rgba(224,48,48,0.15), 0 0 100px rgba(224,48,48,0.07); padding: 1.8rem; }
+
+  .tabs { display: flex; justify-content: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .tab { padding: 0.55rem 1.2rem; border: none; border-bottom: 2px solid transparent; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; cursor: pointer; color: var(--muted); transition: all 0.15s; margin-bottom: -1px; }
+  .tab.active { color: var(--red); border-bottom: 2px solid var(--red); font-weight: 500; }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .game-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; justify-content: center; }
+  .game-btn { padding: 0.4rem 0.9rem; border: 1px solid var(--border); border-radius: 99px; background: var(--tag); font-family: 'DM Mono', monospace; font-size: 0.8rem; cursor: pointer; color: var(--muted); transition: all 0.15s; }
+  .game-btn.active { background: var(--red); color: white; border-color: var(--red); }
+  .game-btn:hover:not(.active) { color: var(--text); border-color: #444; }
+
+  #game-container { background: #0f0f0f; border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; align-items: center; padding: 1.5rem; gap: 1rem; min-height: 420px; justify-content: center; }
+  canvas { display: block; border-radius: 6px; }
+  .game-info { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--muted); text-align: center; }
+  .score-row { display: flex; gap: 1.5rem; align-items: center; font-family: 'DM Mono', monospace; font-size: 0.95rem; color: var(--text); }
+  .score-item { display: flex; align-items: center; gap: 0.4rem; }
+  .score-display { font-family: 'DM Mono', monospace; font-size: 1rem; color: var(--text); }
+  #placeholder-msg { text-align: center; color: var(--muted); font-size: 0.9rem; }
+  #snake-area, #tetris-area, #ttt-area, #breakout-area { display: none; flex-direction: column; align-items: center; gap: 0.75rem; }
+  #tetris-canvas { background: #080808; }
+  #ttt-board { display: grid; grid-template-columns: repeat(3, 90px); grid-template-rows: repeat(3, 90px); gap: 6px; }
+  .ttt-cell { background: var(--tag); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; cursor: pointer; transition: all 0.1s; user-select: none; }
+  .ttt-cell:hover { border-color: var(--red); box-shadow: 0 0 8px var(--red-glow); }
+  .play-btn { padding: 0.5rem 1.4rem; background: var(--red); color: white; border: none; border-radius: 99px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; box-shadow: 0 0 10px var(--red-glow); }
+  .play-btn:hover { opacity: 0.85; }
+
+  .color-section { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+  .color-presets { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; }
+  .color-preset { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: all 0.15s; }
+  .color-preset:hover, .color-preset.active { border-color: white; transform: scale(1.2); }
+  .color-preset.rainbow { background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); }
+  .color-row { display: flex; align-items: center; gap: 0.6rem; }
+  input[type="color"] { width: 32px; height: 32px; border: none; border-radius: 50%; cursor: pointer; background: none; padding: 0; }
+
+  .profile-box { display: flex; flex-direction: column; gap: 1rem; }
+  .profile-stat { background: var(--tag); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+  .profile-stat .label { font-family: 'DM Mono', monospace; font-size: 0.85rem; color: var(--muted); }
+  .profile-stat .value { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: var(--text); font-weight: 500; }
+  .search-row { display: flex; gap: 0.5rem; }
+  .search-input { flex: 1; padding: 0.6rem 1rem; background: #0f0f0f; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.85rem; outline: none; transition: border-color 0.15s; }
+  .search-input:focus { border-color: var(--red); box-shadow: 0 0 8px var(--red-glow); }
+  .search-input::placeholder { color: var(--muted); }
+  .search-btn { padding: 0.6rem 1.1rem; background: var(--red); color: white; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; }
+  .search-err { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--red); }
+  .search-loading { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--muted); }
+  .section-label { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.3rem; }
+
+  .friends-section { margin-bottom: 1.5rem; }
+  .friends-section-title { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.7rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+  .friends-list { display: flex; flex-direction: column; gap: 0.6rem; }
+  .friends-empty { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--muted); padding: 0.8rem 0; }
+  .friend-row { background: var(--tag); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1.1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap; }
+  .friend-row-info { display: flex; flex-direction: column; gap: 0.25rem; }
+  .friend-row-name { font-family: 'DM Mono', monospace; font-size: 0.9rem; color: var(--text); }
+  .friend-row-stats { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); display: flex; gap: 1rem; flex-wrap: wrap; }
+  .friend-row-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+  .btn-sm { padding: 0.3rem 0.75rem; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; cursor: pointer; border: 1px solid var(--border); background: var(--tag); color: var(--muted); transition: all 0.15s; }
+  .btn-sm:hover { border-color: #555; color: var(--text); }
+  .btn-sm-red { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+  .btn-sm-red:hover { background: var(--red); color: white; }
+  .btn-sm-green { background: #0f2a1a; border-color: #22c55e; color: #22c55e; }
+  .btn-sm-green:hover { background: #22c55e; color: #000; }
+
+  .tab-badge { display: inline-flex; align-items: center; justify-content: center; background: var(--red); color: white; font-size: 0.6rem; font-weight: 700; border-radius: 99px; padding: 0.05rem 0.35rem; margin-left: 0.3rem; font-family: 'DM Mono', monospace; line-height: 1.4; vertical-align: middle; }
+
+  .messages-container { display: flex; height: 500px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .messages-sidebar { width: 250px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+  .messages-sidebar-title { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; padding: 1rem; border-bottom: 1px solid var(--border); }
+  .messages-friends-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
+  .messages-empty { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--muted); padding: 1rem; text-align: center; }
+  .messages-friend-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+  .messages-friend-item:hover { background: var(--tag); }
+  .messages-friend-item.active { background: var(--red-dim); }
+  .messages-friend-avatar { font-size: 1.5rem; }
+  .messages-friend-name { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--text); }
+  .messages-chat { flex: 1; display: flex; flex-direction: column; }
+  .messages-chat-header { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--muted); padding: 1rem; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .messages-chat-messages { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.8rem; }
+  .message-item { display: flex; gap: 0.5rem; }
+  .message-item.sent { justify-content: flex-end; }
+  .message-bubble { max-width: 70%; padding: 0.6rem 0.9rem; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; line-height: 1.4; }
+  .message-item.sent .message-bubble { background: var(--red); color: white; }
+  .message-item.received .message-bubble { background: var(--tag); color: var(--text); }
+  .messages-chat-input { display: flex; gap: 0.5rem; padding: 1rem; border-top: 1px solid var(--border); background: var(--surface); }
+  .messages-chat-input input { flex: 1; padding: 0.6rem 0.9rem; background: #0f0f0f; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; outline: none; }
+  .messages-chat-input input:focus { border-color: var(--red); }
+  .messages-chat-input button { padding: 0.6rem 1rem; background: var(--red); color: white; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; transition: opacity 0.15s; }
+  .messages-chat-input button:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="screen" id="screen-login">
+  <div class="card">
+    <div class="card-icon">👤</div>
+    <h2>Login</h2>
+    <input class="field" type="text" id="login-user" placeholder="Email or Username" />
+    <input class="field" type="password" id="login-pass" placeholder="Password" onkeydown="if(event.key==='Enter')window.doLogin()" />
+    <button class="btn-red" onclick="window.doLogin()">Login</button>
+    <button class="btn-ghost" onclick="window.showScreen('screen-register')">No account? Register</button>
+    <div class="card-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div class="screen hidden" id="screen-register">
+  <div class="card">
+    <div class="card-icon">✨</div>
+    <h2>Create account</h2>
+    <input class="field" type="email" id="reg-user" placeholder="Email" />
+    <input class="field" type="text" id="reg-username" placeholder="Username (1-20 chars, letters/numbers/_)" />
+    <input class="field" type="password" id="reg-pass" placeholder="Password" />
+    <input class="field" type="password" id="reg-pass2" placeholder="Confirm password" onkeydown="if(event.key==='Enter')window.doRegister()" />
+    <button class="btn-red" onclick="window.doRegister()">Register</button>
+    <button class="btn-ghost" onclick="window.showScreen('screen-login')">Already have an account?</button>
+    <div class="card-err" id="reg-err"></div>
+    <div class="card-ok" id="reg-ok"></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="hub-title">Block.v2 Online</div>
+  <div class="topbar">
+    <div class="user-pill">👤 <span id="display-username">—</span></div>
+    <button class="logout-btn" onclick="window.doLogout()">logout ↩</button>
+  </div>
+  <div class="box">
+    <div class="tabs">
+      <button class="tab active" onclick="window.switchTab('games',this)">Games</button>
+      <button class="tab" onclick="window.switchTab('profile',this)">Profile</button>
+      <button class="tab" onclick="window.switchTab('search',this)">Search</button>
+      <button class="tab" onclick="window.switchTab('avatar',this)">Avatar</button>
+      <button class="tab" id="tab-friends-btn" onclick="window.switchTab('friends',this)">Friends<span class="tab-badge" id="friends-req-badge" style="display:none">0</span></button>
+      <button class="tab" onclick="window.switchTab('messages',this)">Messages</button>
+    </div>
+
+    <!-- GAMES -->
+    <div class="panel active" id="tab-games">
+      <div class="game-list">
+        <button class="game-btn" onclick="window.showGame('snake',this)">Snake</button>
+        <button class="game-btn" onclick="window.showGame('tetris',this)">Tetris</button>
+        <button class="game-btn" onclick="window.showGame('ttt',this)">Tic-Tac-Toe</button>
+        <button class="game-btn" onclick="window.showGame('breakout',this)">Breakout</button>
+      </div>
+      <div id="game-container">
+        <div id="placeholder-msg">← Pick a game to play</div>
+        <!-- SNAKE -->
+        <div id="snake-area">
+          <div class="score-row">
+            <div class="score-item">🍎 <span id="snake-score">0</span></div>
+            <div class="score-item">🏆 <span id="snake-best-display">0</span></div>
+          </div>
+          <canvas id="snake-canvas" width="360" height="360" style="background:#080808;border-radius:12px;"></canvas>
+          <div class="game-info">WASD or Arrow keys to move</div>
+          <div class="color-section">
+            <div class="section-label">Snake color</div>
+            <div class="color-presets" id="color-presets"></div>
+            <div class="color-row">
+              <input type="color" id="custom-color" value="#ffffff" title="Pick any color" oninput="window.setSnakeColor(this.value,null)" />
+              <span style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);">custom</span>
+            </div>
+          </div>
+          <button class="play-btn" onclick="window.startSnake()">Start / Restart</button>
+        </div>
+        <!-- TETRIS -->
+        <div id="tetris-area">
+          <div class="score-row">
+            <div class="score-item">Score: <span id="tetris-score">0</span></div>
+            <div class="score-item">🏆 <span id="tetris-best-display">0</span></div>
+          </div>
+          <canvas id="tetris-canvas" width="200" height="400"></canvas>
+          <div class="game-info">Arrow keys · Up = rotate · Down = drop</div>
+          <button class="play-btn" onclick="window.startTetris()">Start / Restart</button>
+        </div>
+        <!-- TIC TAC TOE -->
+        <div id="ttt-area">
+          <div class="score-display" id="ttt-status">X's turn</div>
+          <div id="ttt-board"></div>
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <button class="play-btn" onclick="window.resetTTT()">New Game</button>
+            <button class="game-btn" id="ai-toggle" onclick="window.toggleAI()" style="border-radius:99px;">🤖 AI: OFF</button>
+          </div>
+          <div class="game-info">X = You &nbsp;·&nbsp; O = AI (when on)</div>
+        </div>
+        <!-- BREAKOUT -->
+        <div id="breakout-area">
+          <div class="score-display">Score: <span id="breakout-score">0</span></div>
+          <canvas id="breakout-canvas" width="400" height="300" style="background:#080808;"></canvas>
+          <div class="game-info">Mouse or ← → keys to move paddle</div>
+          <button class="play-btn" onclick="window.startBreakout()">Start / Restart</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="panel" id="tab-profile">
+      <div class="profile-box">
+        <div class="profile-stat"><span class="label">👤 Avatar</span><span class="value" id="profile-avatar">👤</span></div>
+        <div class="profile-stat"><span class="label">👤 Username</span><span class="value" id="profile-username">—</span></div>
+        <div class="profile-stat"><span class="label">🐍 Snake Best</span><span class="value" id="profile-snake">0</span></div>
+        <div class="profile-stat"><span class="label">🏆 Tetris Best</span><span class="value" id="profile-tetris">0</span></div>
+        <div class="profile-stat"><span class="label">🏓 Breakout Best</span><span class="value" id="profile-breakout">0</span></div>
+      </div>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="panel" id="tab-search">
+      <div class="profile-box">
+        <div style="margin-top:0.5rem;">
+          <div class="section-label" style="margin-bottom:0.6rem;">🔍 Search a user</div>
+          <div class="search-row">
+            <input class="search-input" id="friend-search-input" type="text" placeholder="Enter username..." onkeydown="if(event.key==='Enter')window.searchFriend()" />
+            <button class="search-btn" onclick="window.searchFriend()">Search</button>
+          </div>
+          <div id="friend-result" style="margin-top:0.8rem;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AVATAR -->
+    <div class="panel" id="tab-avatar">
+      <div style="background:var(--tag);border:1px dashed #f97316;border-radius:12px;padding:2rem 2.5rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+        <div style="font-size:2.5rem;">🚧</div>
+        <div style="font-family:'DM Mono',monospace;font-size:1rem;color:#f97316;">Avatar</div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--muted);">This feature is still being worked on.<br>Check back soon!</div>
+      </div>
+    </div>
+
+    <!-- FRIENDS -->
+    <div class="panel" id="tab-friends">
+      <div class="friends-section">
+        <div class="friends-section-title">Requests Received</div>
+        <div class="friends-list" id="friends-requests-list"><div class="friends-empty">No pending requests.</div></div>
+      </div>
+      <div class="friends-section">
+        <div class="friends-section-title">Friends</div>
+        <div class="friends-list" id="friends-list"><div class="friends-empty">No friends yet. Search for a user and add them!</div></div>
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="panel" id="tab-messages">
+      <div class="messages-container">
+        <div class="messages-sidebar">
+          <div class="messages-sidebar-title">Friends</div>
+          <div class="messages-friends-list" id="messages-friends-list"><div class="messages-empty">No friends to message.</div></div>
+        </div>
+        <div class="messages-chat">
+          <div class="messages-chat-header" id="messages-chat-header">Select a friend to start chatting</div>
+          <div class="messages-chat-messages" id="messages-chat-messages"></div>
+          <div class="messages-chat-input">
+            <input type="text" id="messages-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')window.sendMessage()">
+            <button onclick="window.sendMessage()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ STATE ============
+let currentUser = null, tetrisBest = 0, snakeBestDB = 0, avatar = '👤', currentUsername = null;
+let snakeColor = '#ffffff', snakeRainbow = false;
+let currentChatFriend = null, messagesUnsub = null;
+
+// ============ CACHE ============
+// In-memory cache to avoid redundant Firestore reads
+let cachedFriends = null;           // array of emails
+let cachedRequests = null;          // {incoming:[], outgoing:[]}
+let cachedProfiles = {};            // email -> profile object
+let friendsUnsub = null;
+let requestsUnsub = null;
+
+function invalidateCache() {
+  cachedFriends = null;
+  cachedRequests = null;
+}
+
+// Subscribe to friends + requests in real-time so cache stays fresh
+function subscribeFriendData() {
+  if (!currentUser) return;
+  if (friendsUnsub) friendsUnsub();
+  if (requestsUnsub) requestsUnsub();
+
+  // Watch friendships
+  const q1 = db.collection('friends').where('user1', '==', currentUser);
+  const q2 = db.collection('friends').where('user2', '==', currentUser);
+
+  let friends1 = [], friends2 = [];
+  const rebuildFriends = () => {
+    cachedFriends = [...new Set([...friends1, ...friends2])];
+    refreshFriendsUI();
+  };
+
+  friendsUnsub = (() => {
+    const u1 = q1.onSnapshot(snap => {
+      friends1 = snap.docs.map(d => d.data().user2);
+      rebuildFriends();
+    });
+    const u2 = q2.onSnapshot(snap => {
+      friends2 = snap.docs.map(d => d.data().user1);
+      rebuildFriends();
+    });
+    return () => { u1(); u2(); };
+  })();
+
+  // Watch incoming requests
+  requestsUnsub = db.collection('friendRequests')
+    .where('to', '==', currentUser)
+    .where('status', '==', 'pending')
+    .onSnapshot(snap => {
+      const incoming = snap.docs.map(d => d.data().from);
+      if (!cachedRequests) cachedRequests = { incoming: [], outgoing: [] };
+      cachedRequests.incoming = incoming;
+      updateRequestBadge(incoming.length);
+      refreshFriendsUI();
+    });
+}
+
+function unsubscribeFriendData() {
+  if (friendsUnsub) { friendsUnsub(); friendsUnsub = null; }
+  if (requestsUnsub) { requestsUnsub(); requestsUnsub = null; }
+  cachedFriends = null;
+  cachedRequests = null;
+  cachedProfiles = {};
+}
+
+function updateRequestBadge(count) {
+  const badge = document.getElementById('friends-req-badge');
+  if (!badge) return;
+  badge.textContent = count || '';
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+}
+
+// Refresh friends UI if the tab is currently visible
+function refreshFriendsUI() {
+  const panel = document.getElementById('tab-friends');
+  if (panel && panel.classList.contains('active')) {
+    renderFriendsTab();
+  }
+  // Also refresh messages sidebar if visible
+  const msgPanel = document.getElementById('tab-messages');
+  if (msgPanel && msgPanel.classList.contains('active')) {
+    renderMessagesSidebar();
+  }
+}
+
+// ============ PROFILE CACHE ============
+async function getUserProfileByEmail(email) {
+  if (cachedProfiles[email]) return cachedProfiles[email];
+  try {
+    const snap = await db.collection('users').where('email', '==', email).limit(1).get();
+    if (!snap.empty) {
+      const d = snap.docs[0].data();
+      const profile = {
+        username: d.username || email.split('@')[0],
+        email,
+        avatar: d.avatar || '👤',
+        snake_best: d.snake_best || 0,
+        tetris_best: d.tetris_best || 0,
+        breakout_best: d.breakout_best || 0
+      };
+      cachedProfiles[email] = profile;
+      return profile;
+    }
+  } catch (e) { console.warn('getUserProfileByEmail error:', e); }
+  const fallback = { username: email.split('@')[0], email, avatar: '👤', snake_best: 0, tetris_best: 0, breakout_best: 0 };
+  cachedProfiles[email] = fallback;
+  return fallback;
+}
+
+// Batch-fetch profiles for a list of emails
+async function batchGetProfiles(emails) {
+  const missing = emails.filter(e => !cachedProfiles[e]);
+  if (missing.length > 0) {
+    // Firestore 'in' query supports up to 10 items at a time
+    const chunks = [];
+    for (let i = 0; i < missing.length; i += 10) chunks.push(missing.slice(i, i + 10));
+    for (const chunk of chunks) {
+      try {
+        const snap = await db.collection('users').where('email', 'in', chunk).get();
+        snap.docs.forEach(doc => {
+          const d = doc.data();
+          if (d.email) {
+            cachedProfiles[d.email] = {
+              username: d.username || d.email.split('@')[0],
+              email: d.email,
+              avatar: d.avatar || '👤',
+              snake_best: d.snake_best || 0,
+              tetris_best: d.tetris_best || 0,
+              breakout_best: d.breakout_best || 0
+            };
+          }
+        });
+        // Fill in any that weren't returned
+        chunk.forEach(e => {
+          if (!cachedProfiles[e]) {
+            cachedProfiles[e] = { username: e.split('@')[0], email: e, avatar: '👤', snake_best: 0, tetris_best: 0, breakout_best: 0 };
+          }
+        });
+      } catch (err) {
+        console.warn('batchGetProfiles error:', err);
+        chunk.forEach(e => {
+          if (!cachedProfiles[e]) {
+            cachedProfiles[e] = { username: e.split('@')[0], email: e, avatar: '👤', snake_best: 0, tetris_best: 0, breakout_best: 0 };
+          }
+        });
+      }
+    }
+  }
+  return emails.map(e => cachedProfiles[e]);
+}
+
+// ============ UTILITY ============
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+// ============ FIRESTORE FRIENDS ============
+async function getFriendships() {
+  if (cachedFriends !== null) return cachedFriends;
+  if (!currentUser) return [];
+  const [s1, s2] = await Promise.all([
+    db.collection('friends').where('user1', '==', currentUser).get(),
+    db.collection('friends').where('user2', '==', currentUser).get()
+  ]);
+  const f = [];
+  s1.forEach(d => f.push(d.data().user2));
+  s2.forEach(d => f.push(d.data().user1));
+  cachedFriends = f;
+  return f;
+}
+
+async function getFriendRequests() {
+  if (cachedRequests !== null) return cachedRequests;
+  if (!currentUser) return { incoming: [], outgoing: [] };
+  const [inc, out] = await Promise.all([
+    db.collection('friendRequests').where('to', '==', currentUser).where('status', '==', 'pending').get(),
+    db.collection('friendRequests').where('from', '==', currentUser).where('status', '==', 'pending').get()
+  ]);
+  cachedRequests = {
+    incoming: inc.docs.map(d => d.data().from),
+    outgoing: out.docs.map(d => d.data().to)
+  };
+  return cachedRequests;
+}
+
+async function getFriendshipStatus(otherEmail) {
+  if (!currentUser || !otherEmail) return null;
+  const f = await getFriendships();
+  if (f.includes(otherEmail)) return 'accepted';
+  const r = await getFriendRequests();
+  if (r.incoming.includes(otherEmail)) return 'received';
+  if (r.outgoing.includes(otherEmail)) return 'sent';
+  return null;
+}
+
+async function sendFriendRequest(toEmail) {
+  if (!currentUser || !toEmail) return;
+  const status = await getFriendshipStatus(toEmail);
+  if (status) return;
+  await db.collection('friendRequests').add({
+    from: currentUser, fromUsername: currentUsername, to: toEmail,
+    status: 'pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  invalidateCache();
+}
+
+async function acceptFriendRequest(fromEmail) {
+  if (!currentUser || !fromEmail) return;
+  const snap = await db.collection('friendRequests')
+    .where('from', '==', fromEmail).where('to', '==', currentUser).where('status', '==', 'pending').limit(1).get();
+  if (snap.empty) return;
+  const reqDoc = snap.docs[0];
+  const fromUsername = reqDoc.data().fromUsername || fromEmail.split('@')[0];
+  const batch = db.batch();
+  batch.set(db.collection('friends').doc(), {
+    user1: fromEmail, user2: currentUser,
+    user1Username: fromUsername, user2Username: currentUsername,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  batch.delete(reqDoc.ref);
+  await batch.commit();
+  invalidateCache();
+}
+
+async function declineFriendRequest(fromEmail) {
+  if (!currentUser || !fromEmail) return;
+  const snap = await db.collection('friendRequests')
+    .where('from', '==', fromEmail).where('to', '==', currentUser).where('status', '==', 'pending').get();
+  const batch = db.batch();
+  snap.docs.forEach(d => batch.delete(d.ref));
+  await batch.commit();
+  invalidateCache();
+}
+
+async function removeFriend(otherEmail) {
+  if (!currentUser || !otherEmail) return;
+  const [s1, s2] = await Promise.all([
+    db.collection('friends').where('user1', '==', currentUser).where('user2', '==', otherEmail).get(),
+    db.collection('friends').where('user1', '==', otherEmail).where('user2', '==', currentUser).get()
+  ]);
+  const batch = db.batch();
+  s1.docs.forEach(d => batch.delete(d.ref));
+  s2.docs.forEach(d => batch.delete(d.ref));
+  await batch.commit();
+  invalidateCache();
+  // Evict profile cache for that user so stats refresh next time
+  delete cachedProfiles[otherEmail];
+}
+
+// ============ MESSAGING ============
+async function renderMessagesSidebar() {
+  const list = document.getElementById('messages-friends-list');
+  const friends = await getFriendships();
+  list.innerHTML = '';
+  if (friends.length === 0) { list.innerHTML = '<div class="messages-empty">No friends to message.</div>'; return; }
+  const profiles = await batchGetProfiles(friends);
+  profiles.forEach((p, i) => {
+    const email = friends[i];
+    const item = document.createElement('div');
+    item.className = 'messages-friend-item' + (currentChatFriend === email ? ' active' : '');
+    item.addEventListener('click', e => openChat(e, email));
+    item.innerHTML = `<div class="messages-friend-avatar">${esc(p.avatar || '👤')}</div><div class="messages-friend-name">${esc(p.username || email)}</div>`;
+    list.appendChild(item);
+  });
+}
+
+async function loadMessagesTab() {
+  await renderMessagesSidebar();
+}
+
+async function openChat(event, friendEmail) {
+  currentChatFriend = friendEmail;
+  document.querySelectorAll('.messages-friend-item').forEach(i => i.classList.remove('active'));
+  if (event?.currentTarget) event.currentTarget.classList.add('active');
+  const p = await getUserProfileByEmail(friendEmail);
+  document.getElementById('messages-chat-header').textContent = `Chatting with ${p.username || friendEmail}`;
+  subscribeMessages(friendEmail);
+}
+
+function subscribeMessages(friendEmail) {
+  const div = document.getElementById('messages-chat-messages');
+  div.innerHTML = '<div style="text-align:center;color:var(--muted);">Loading...</div>';
+  if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
+  const convId = [currentUser, friendEmail].sort().join('_');
+  messagesUnsub = db.collection('conversations').doc(convId).collection('messages')
+    .orderBy('timestamp', 'asc').limit(50)
+    .onSnapshot(snap => {
+      div.innerHTML = '';
+      if (snap.empty) { div.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:0.85rem;">No messages yet. Say hi! 👋</div>'; return; }
+      snap.docs.forEach(doc => {
+        const msg = doc.data();
+        const item = document.createElement('div');
+        item.className = `message-item ${msg.from === currentUser ? 'sent' : 'received'}`;
+        item.innerHTML = `<div class="message-bubble">${esc(msg.text)}</div>`;
+        div.appendChild(item);
+      });
+      div.scrollTop = div.scrollHeight;
+    }, err => {
+      div.innerHTML = '<div style="text-align:center;color:var(--red);">Failed to load messages.</div>';
+    });
+}
+
+async function sendMessage() {
+  const input = document.getElementById('messages-input');
+  const text = input.value.trim();
+  if (!text || !currentChatFriend) return;
+  if (text.length > 500) { alert('Message too long (max 500 chars)'); return; }
+  input.value = '';
+  const convId = [currentUser, currentChatFriend].sort().join('_');
+  try {
+    await db.collection('conversations').doc(convId).collection('messages').add({
+      from: currentUser, text, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (e) { alert('Failed to send message.'); }
+}
+
+// ============ COLOR PRESETS ============
+const PRESETS = [
+  { color: 'rainbow' }, { color: '#ffffff' }, { color: '#e03030' },
+  { color: '#f97316' }, { color: '#ffd700' }, { color: '#22c55e' },
+  { color: '#00f5ff' }, { color: '#3b82f6' }, { color: '#a855f7' },
+  { color: '#ff69b4' }, { color: '#000000' }
+];
+
+function buildColorPresets() {
+  const container = document.getElementById('color-presets');
+  container.innerHTML = '';
+  PRESETS.forEach(p => {
+    const btn = document.createElement('div');
+    btn.className = 'color-preset' + (p.color === 'rainbow' ? ' rainbow' : '');
+    if (p.color !== 'rainbow') btn.style.background = p.color;
+    if (p.color === '#000000') btn.style.border = '2px solid #555';
+    btn.title = p.color === 'rainbow' ? 'Rainbow' : p.color;
+    btn.onclick = () => setSnakeColor(p.color, btn);
+    container.appendChild(btn);
+  });
+  const presets = container.querySelectorAll('.color-preset');
+  if (snakeColor === 'rainbow') presets[0]?.classList.add('active');
+  else { const idx = PRESETS.findIndex(p => p.color === snakeColor); presets[idx > 0 ? idx : 1]?.classList.add('active'); }
+}
+
+function setSnakeColor(color, btn) {
+  document.querySelectorAll('.color-preset').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (color === 'rainbow') { snakeRainbow = true; snakeColor = 'rainbow'; }
+  else { snakeRainbow = false; snakeColor = color; const ci = document.getElementById('custom-color'); if (ci) ci.value = color; }
+  if (currentUsername) db.collection('users').doc(currentUsername.toLowerCase()).set({ snakeColor }, { merge: true }).catch(() => {});
+}
+
+// ============ SCREENS ============
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id)?.classList.remove('hidden');
+}
+
+function enterHub() {
+  document.querySelectorAll('.screen').forEach(s => { s.classList.add('hidden'); s.style.display = 'none'; });
+  document.getElementById('main').style.display = 'flex';
+  const name = currentUsername || currentUser?.split('@')[0] || '—';
+  document.getElementById('display-username').textContent = name;
+  document.getElementById('profile-username').textContent = name;
+  document.getElementById('profile-snake').textContent = snakeBestDB;
+  document.getElementById('profile-tetris').textContent = tetrisBest;
+  document.getElementById('profile-avatar').textContent = avatar;
+  document.getElementById('tetris-best-display').textContent = tetrisBest;
+  document.getElementById('snake-best-display').textContent = snakeBestDB;
+  buildColorPresets();
+  subscribeFriendData();
+}
+
+function doLogout() {
+  if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
+  unsubscribeFriendData();
+  currentUser = null; tetrisBest = 0; snakeBestDB = 0; avatar = '👤'; currentUsername = null; currentChatFriend = null;
+  document.getElementById('main').style.display = 'none';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  const login = document.getElementById('screen-login');
+  login.classList.remove('hidden'); login.style.display = '';
+  auth.signOut().catch(() => {});
+}
+
+// ============ AUTH ============
+async function loadUserData() {
+  if (!currentUsername) return;
+  try {
+    const doc = await db.collection('users').doc(currentUsername.toLowerCase()).get();
+    if (doc.exists) {
+      const d = doc.data();
+      tetrisBest = d.tetris_best || 0;
+      snakeBestDB = d.snake_best || 0;
+      snakeColor = d.snakeColor || '#ffffff';
+      snakeRainbow = snakeColor === 'rainbow';
+      avatar = d.avatar || '👤';
+      currentUsername = d.username || currentUsername;
+      document.getElementById('profile-breakout').textContent = d.breakout_best || 0;
+    }
+  } catch (e) { console.warn('loadUserData error:', e); }
+}
+
+async function doRegister() {
+  const regErr = document.getElementById('reg-err'), regOk = document.getElementById('reg-ok');
+  regErr.textContent = ''; regOk.textContent = '';
+  const origUsername = document.getElementById('reg-username').value.trim();
+  const username = origUsername.toLowerCase();
+  if (!origUsername || origUsername.length < 1 || origUsername.length > 20 || !/^[a-zA-Z0-9_]+$/.test(origUsername)) {
+    regErr.textContent = 'Username must be 1-20 chars, letters/numbers/_ only.'; return;
+  }
+  const pass = document.getElementById('reg-pass').value;
+  const pass2 = document.getElementById('reg-pass2').value;
+  if (pass !== pass2) { regErr.textContent = 'Passwords do not match'; return; }
+  const email = document.getElementById('reg-user').value.trim();
+  try {
+    const existing = await db.collection('users').doc(username).get();
+    if (existing.exists) { regErr.textContent = 'Username already taken.'; return; }
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    await cred.user.updateProfile({ displayName: origUsername });
+    await db.collection('users').doc(username).set({
+      email, username: origUsername, snake_best: 0, tetris_best: 0, breakout_best: 0, avatar: '👤', snakeColor: '#ffffff'
+    });
+    regOk.textContent = 'Account created!';
+    currentUser = email; currentUsername = origUsername;
+    await loadUserData(); enterHub();
+  } catch (e) { regErr.textContent = e.message; }
+}
+
+async function doLogin() {
+  const loginErr = document.getElementById('login-err');
+  loginErr.textContent = '';
+  let email = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  if (!email.includes('@')) {
+    try {
+      const doc = await db.collection('users').doc(email.toLowerCase()).get();
+      if (doc.exists) email = doc.data().email;
+      else { loginErr.textContent = 'Username not found.'; return; }
+    } catch (e) { loginErr.textContent = 'Login failed.'; return; }
+  }
+  try {
+    const cred = await auth.signInWithEmailAndPassword(email, pass);
+    currentUser = cred.user.email;
+    currentUsername = cred.user.displayName || cred.user.email.split('@')[0];
+    await loadUserData(); enterHub();
+  } catch (e) { loginErr.textContent = e.message; }
+}
+
+// ============ TABS ============
+function switchTab(tabName, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tabName)?.classList.add('active');
+  if (tabName === 'friends') renderFriendsTab();
+  if (tabName === 'messages') loadMessagesTab();
+}
+
+function showGame(game, btn) {
+  document.querySelectorAll('.game-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('placeholder-msg').style.display = 'none';
+  ['snake-area', 'tetris-area', 'ttt-area', 'breakout-area'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
+  document.getElementById(game + '-area').style.display = 'flex';
+}
+
+// ============ FRIENDS TAB ============
+async function renderFriendsTab() {
+  const reqList = document.getElementById('friends-requests-list');
+  const fList = document.getElementById('friends-list');
+  try {
+    // Requests
+    const requests = cachedRequests || await getFriendRequests();
+    const incoming = requests.incoming || [];
+    reqList.innerHTML = '';
+    if (incoming.length === 0) {
+      reqList.innerHTML = '<div class="friends-empty">No pending requests.</div>';
+    } else {
+      const profiles = await batchGetProfiles(incoming);
+      profiles.forEach((p, i) => {
+        const email = incoming[i];
+        const row = document.createElement('div'); row.className = 'friend-row';
+        row.innerHTML = `<div class="friend-row-info"><div class="friend-row-name">${esc(p.avatar)} ${esc(p.username)}</div></div>
+          <div class="friend-row-actions">
+            <button class="btn-sm btn-sm-green" onclick="window.handleAccept('${esc(email)}')">Accept</button>
+            <button class="btn-sm btn-sm-red" onclick="window.handleDecline('${esc(email)}')">Decline</button>
+          </div>`;
+        reqList.appendChild(row);
+      });
+    }
+    updateRequestBadge(incoming.length);
+
+    // Friends list
+    const friends = cachedFriends !== null ? cachedFriends : await getFriendships();
+    fList.innerHTML = '';
+    if (friends.length === 0) {
+      fList.innerHTML = '<div class="friends-empty">No friends yet. Search for a user and add them!</div>';
+    } else {
+      const profiles = await batchGetProfiles(friends);
+      profiles.forEach((p, i) => {
+        const email = friends[i];
+        const row = document.createElement('div'); row.className = 'friend-row';
+        row.innerHTML = `<div class="friend-row-info">
+          <div class="friend-row-name">${esc(p.avatar)} ${esc(p.username)}</div>
+          <div class="friend-row-stats"><span>🐍 ${p.snake_best}</span><span>🏆 ${p.tetris_best}</span></div>
+        </div>
+        <div class="friend-row-actions"><button class="btn-sm btn-sm-red" onclick="window.handleRemove('${esc(email)}')">Remove</button></div>`;
+        fList.appendChild(row);
+      });
+    }
+  } catch (e) {
+    reqList.innerHTML = '<div class="friends-empty">Error loading.</div>';
+    fList.innerHTML = '<div class="friends-empty">Error loading.</div>';
+  }
+}
+
+// Keep old name as alias for compatibility
+async function loadFriendsTab() { await renderFriendsTab(); }
+
+async function handleAccept(fromEmail) {
+  try { await acceptFriendRequest(fromEmail); } catch (e) { alert('Failed to accept: ' + e.message); }
+}
+async function handleDecline(fromEmail) { await declineFriendRequest(fromEmail); }
+async function handleRemove(otherEmail) {
+  await removeFriend(otherEmail);
+  if (currentChatFriend === otherEmail) {
+    currentChatFriend = null;
+    if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
+    document.getElementById('messages-chat-header').textContent = 'Select a friend to start chatting';
+    document.getElementById('messages-chat-messages').innerHTML = '';
+  }
+}
+
+// ============ SEARCH ============
+async function searchFriend() {
+  const q = document.getElementById('friend-search-input').value.trim();
+  const result = document.getElementById('friend-result');
+  if (!q) { result.innerHTML = '<div class="search-err">Type a username to search.</div>'; return; }
+  if (q.toLowerCase() === currentUsername?.toLowerCase()) { result.innerHTML = '<div class="search-err">That\'s you!</div>'; return; }
+  result.innerHTML = '<div class="search-loading">Searching...</div>';
+  try {
+    // Look up by username doc (lowercase key)
+    const snap = await db.collection('users').doc(q.toLowerCase()).get();
+    if (!snap.exists) { result.innerHTML = '<div class="search-err">User not found.</div>'; return; }
+    const data = snap.data();
+    const email = data.email;
+    if (!email) { result.innerHTML = '<div class="search-err">User not found.</div>'; return; }
+    if (email === currentUser) { result.innerHTML = '<div class="search-err">That\'s you!</div>'; return; }
+
+    // Need to get fresh friendship status — don't rely on cache here since user just searched
+    const f = cachedFriends !== null ? cachedFriends : await getFriendships();
+    const r = cachedRequests !== null ? cachedRequests : await getFriendRequests();
+    let status = null;
+    if (f.includes(email)) status = 'accepted';
+    else if (r.incoming.includes(email)) status = 'received';
+    else if (r.outgoing.includes(email)) status = 'sent';
+
+    result.innerHTML = '';
+    const card = document.createElement('div'); card.className = 'friend-row';
+    const info = document.createElement('div'); info.className = 'friend-row-info';
+    const name = document.createElement('div'); name.className = 'friend-row-name';
+    name.textContent = `${data.avatar || '👤'} ${data.username || q}`;
+    const stats = document.createElement('div'); stats.className = 'friend-row-stats';
+    stats.innerHTML = `<span>🐍 ${data.snake_best || 0}</span><span>🏆 ${data.tetris_best || 0}</span>`;
+    info.appendChild(name); info.appendChild(stats);
+    const actions = document.createElement('div'); actions.className = 'friend-row-actions';
+    const btn = document.createElement('button');
+    if (status === 'accepted') { btn.className = 'btn-sm'; btn.textContent = '✓ Friends'; btn.disabled = true; }
+    else if (status === 'sent') { btn.className = 'btn-sm'; btn.textContent = '⏳ Pending'; btn.disabled = true; }
+    else if (status === 'received') {
+      btn.className = 'btn-sm btn-sm-green'; btn.textContent = '✓ Accept';
+      btn.onclick = () => handleAccept(email).then(() => searchFriend());
+    } else {
+      btn.className = 'btn-sm btn-sm-green'; btn.textContent = 'Add Friend';
+      btn.onclick = async () => {
+        btn.disabled = true; btn.textContent = '⏳ Pending';
+        await sendFriendRequest(email);
+      };
+    }
+    actions.appendChild(btn); card.appendChild(info); card.appendChild(actions);
+    result.appendChild(card);
+  } catch (e) {
+    console.error('searchFriend error:', e);
+    result.innerHTML = `<div class="search-err">Search failed: ${esc(e.message || 'unknown error')}</div>`;
+  }
+}
+
+// ============ GAMES ============
+const keysDown = {};
+window.addEventListener('keydown', e => {
+  keysDown[e.key] = true;
+  const tag = document.activeElement.tagName;
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key) && tag !== 'INPUT' && tag !== 'TEXTAREA') e.preventDefault();
+});
+window.addEventListener('keyup', e => { keysDown[e.key] = false; });
+
+/* SNAKE */
+let snakeGame, snakeBestLocal = 0, rainbowTick = 0, snakeMoves = [], snakeFoods = [];
+let snakeDir = { x: 1, y: 0 }, snakeNextDir = { x: 1, y: 0 };
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+}
+function hsl(h, s, l) { return `hsl(${h},${s}%,${l}%)`; }
+function snakeKeyHandler(e) {
+  if ((e.key==='ArrowUp'||e.key==='w'||e.key==='W')&&snakeDir.y===0) { snakeNextDir={x:0,y:-1}; }
+  else if ((e.key==='ArrowDown'||e.key==='s'||e.key==='S')&&snakeDir.y===0) { snakeNextDir={x:0,y:1}; }
+  else if ((e.key==='ArrowLeft'||e.key==='a'||e.key==='A')&&snakeDir.x===0) { snakeNextDir={x:-1,y:0}; }
+  else if ((e.key==='ArrowRight'||e.key==='d'||e.key==='D')&&snakeDir.x===0) { snakeNextDir={x:1,y:0}; }
+}
+let snakeKeyAttached = false;
+function startSnake() {
+  clearInterval(snakeGame); snakeMoves = []; snakeFoods = []; rainbowTick = 0;
+  snakeDir = { x:1, y:0 }; snakeNextDir = { x:1, y:0 };
+  if (!snakeKeyAttached) { window.addEventListener('keydown', snakeKeyHandler); snakeKeyAttached = true; }
+  const canvas = document.getElementById('snake-canvas'), ctx = canvas.getContext('2d');
+  const size = 20, cols = 18, rows = 18;
+  let snake = [{x:9,y:9},{x:8,y:9},{x:7,y:9}], score = 0, running = true, food = rndFood();
+  function rndFood() { let f; do { f={x:Math.floor(Math.random()*cols),y:Math.floor(Math.random()*rows)}; } while(snake.some(s=>s.x===f.x&&s.y===f.y)); return f; }
+  snakeGame = setInterval(() => {
+    if (!running) return; rainbowTick++; snakeDir = snakeNextDir;
+    const head = { x: snake[0].x+snakeDir.x, y: snake[0].y+snakeDir.y };
+    if (head.x<0||head.x>=cols||head.y<0||head.y>=rows||snake.some(s=>s.x===head.x&&s.y===head.y)) {
+      running = false;
+      if (score > snakeBestLocal) snakeBestLocal = score;
+      document.getElementById('snake-best-display').textContent = Math.max(snakeBestLocal, snakeBestDB);
+      if (currentUser && currentUsername && score > snakeBestDB) {
+        db.collection('users').doc(currentUsername.toLowerCase()).update({ snake_best: score })
+          .then(() => { snakeBestDB = score; document.getElementById('profile-snake').textContent = score; document.getElementById('snake-best-display').textContent = score; })
+          .catch(() => {});
+      }
+      ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = '#e03030'; ctx.font = 'bold 20px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('Game Over!', canvas.width/2, canvas.height/2-14);
+      ctx.fillStyle = '#f0ede8'; ctx.font = '14px monospace';
+      ctx.fillText('🍎 '+score+'   🏆 '+Math.max(snakeBestLocal,snakeBestDB), canvas.width/2, canvas.height/2+14);
+      return;
+    }
+    snake.unshift(head);
+    if (head.x===food.x && head.y===food.y) { score++; document.getElementById('snake-score').textContent = score; food = rndFood(); }
+    else snake.pop();
+    ctx.fillStyle = '#080808'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.font = (size-2)+'px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('🍎', food.x*size+size/2, food.y*size+size/2);
+    snake.forEach((s, i) => {
+      const pad = i===0?1:2, r = i===0?6:5;
+      if (snakeRainbow) { ctx.fillStyle = hsl((rainbowTick*6+i*20)%360, 100, 60); }
+      else { ctx.globalAlpha = Math.max(0.3, 1-i*0.04); ctx.fillStyle = snakeColor; }
+      roundRect(ctx, s.x*size+pad, s.y*size+pad, size-pad*2, size-pad*2, r); ctx.fill(); ctx.globalAlpha = 1;
+      if (i === 0) {
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        const cx = s.x*size+size/2, cy = s.y*size+size/2, perp = {x:-snakeDir.y, y:snakeDir.x};
+        ctx.beginPath(); ctx.arc(cx+snakeDir.x*4+perp.x*3, cy+snakeDir.y*4+perp.y*3, 2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx+snakeDir.x*4-perp.x*3, cy+snakeDir.y*4-perp.y*3, 2, 0, Math.PI*2); ctx.fill();
+      }
+    });
+  }, 130);
+}
+
+/* TETRIS */
+let tetrisRAF, tetrisCurrentScore = 0;
+const PIECES = [[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]],[[1,1,0],[0,1,1]],[[0,1,1],[1,1,0]]];
+const TCOLORS = ['#00f5ff','#ffd700','#a855f7','#f97316','#3b82f6','#22c55e','#ef4444'];
+function startTetris() {
+  cancelAnimationFrame(tetrisRAF); tetrisCurrentScore = 0;
+  const canvas = document.getElementById('tetris-canvas'), ctx = canvas.getContext('2d');
+  const W = 10, H = 20, BS = 20;
+  let board = Array.from({length:H}, () => Array(W).fill(0));
+  let cb = Array.from({length:H}, () => Array(W).fill(null));
+  let ts = 0; document.getElementById('tetris-score').textContent = 0;
+  document.getElementById('tetris-best-display').textContent = tetrisBest;
+  let pi = Math.floor(Math.random()*7), piece = PIECES[pi], color = TCOLORS[pi], px = 3, py = 0, lt = 0;
+  const rotate = p => p[0].map((_,i) => p.map(r => r[i])).map(r => r.reverse());
+  const valid = (p,x,y) => p.every((row,dy) => row.every((v,dx) => !v||(y+dy>=0&&y+dy<H&&x+dx>=0&&x+dx<W&&!board[y+dy][x+dx])));
+  function lock() {
+    piece.forEach((row,dy) => row.forEach((v,dx) => { if(v) { board[py+dy][px+dx]=1; cb[py+dy][px+dx]=color; } }));
+    for (let r=H-1; r>=0; r--) {
+      if (board[r].every(c=>c)) { board.splice(r,1); board.unshift(Array(W).fill(0)); cb.splice(r,1); cb.unshift(Array(W).fill(null)); ts+=100; tetrisCurrentScore=ts; document.getElementById('tetris-score').textContent=ts; r++; }
+    }
+    pi=Math.floor(Math.random()*7); piece=PIECES[pi]; color=TCOLORS[pi]; px=3; py=0;
+    if (!valid(piece,px,py)) {
+      if (currentUser && currentUsername && tetrisCurrentScore > tetrisBest) {
+        db.collection('users').doc(currentUsername.toLowerCase()).update({tetris_best:tetrisCurrentScore})
+          .then(() => { tetrisBest=tetrisCurrentScore; document.getElementById('profile-tetris').textContent=tetrisBest; document.getElementById('tetris-best-display').textContent=tetrisBest; })
+          .catch(() => {});
+      }
+      ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle='#e03030'; ctx.font='bold 16px monospace'; ctx.textAlign='center';
+      ctx.fillText('Game Over', canvas.width/2, canvas.height/2-10);
+      ctx.fillStyle='#f0ede8'; ctx.font='13px monospace';
+      ctx.fillText('Score: '+tetrisCurrentScore, canvas.width/2, canvas.height/2+12);
+      cancelAnimationFrame(tetrisRAF);
+    }
+  }
+  if (window._tetrisKeyHandler) window.removeEventListener('keydown', window._tetrisKeyHandler);
+  window._tetrisKeyHandler = e => {
+    if (e.key==='ArrowLeft'&&valid(piece,px-1,py)) px--;
+    else if (e.key==='ArrowRight'&&valid(piece,px+1,py)) px++;
+    else if (e.key==='ArrowDown'&&valid(piece,px,py+1)) py++;
+    else if (e.key==='ArrowUp') { const r=rotate(piece); if(valid(r,px,py)) piece=r; }
+  };
+  window.addEventListener('keydown', window._tetrisKeyHandler);
+  function loop(t) {
+    if (t-lt>500) { if(valid(piece,px,py+1)) py++; else lock(); lt=t; }
+    ctx.fillStyle='#080808'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    board.forEach((row,y) => row.forEach((v,x) => { if(v) { ctx.fillStyle=cb[y][x]; ctx.fillRect(x*BS,y*BS,BS-1,BS-1); } }));
+    piece.forEach((row,dy) => row.forEach((v,dx) => { if(v) { ctx.fillStyle=color; ctx.fillRect((px+dx)*BS,(py+dy)*BS,BS-1,BS-1); } }));
+    tetrisRAF = requestAnimationFrame(loop);
+  }
+  tetrisRAF = requestAnimationFrame(loop);
+}
+
+/* TIC TAC TOE */
+let tttBoard, tttTurn, tttOver, tttAI = false;
+function toggleAI() {
+  tttAI = !tttAI;
+  const btn = document.getElementById('ai-toggle');
+  btn.textContent = tttAI ? '🤖 AI: ON' : '🤖 AI: OFF';
+  btn.style.background = tttAI ? 'var(--red)' : '';
+  btn.style.color = tttAI ? 'white' : '';
+  btn.style.borderColor = tttAI ? 'var(--red)' : '';
+  resetTTT();
+}
+function resetTTT() {
+  tttBoard = Array(9).fill(''); tttTurn = 'X'; tttOver = false;
+  document.getElementById('ttt-status').textContent = tttAI ? 'Your turn (X)' : "X's turn";
+  const b = document.getElementById('ttt-board'); b.innerHTML = '';
+  for (let i=0; i<9; i++) { const c=document.createElement('div'); c.className='ttt-cell'; c.dataset.i=i; c.onclick=()=>tttMove(i); b.appendChild(c); }
+}
+const WIN_LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+function checkWinner(b) { for(const[a,x,c]of WIN_LINES){if(b[a]&&b[a]===b[x]&&b[a]===b[c])return b[a];}if(b.every(c=>c))return'draw';return null; }
+function minimax(b,isMax) { const w=checkWinner(b);if(w==='O')return 10;if(w==='X')return -10;if(w==='draw')return 0;let best=isMax?-Infinity:Infinity;for(let i=0;i<9;i++){if(!b[i]){b[i]=isMax?'O':'X';const s=minimax(b,!isMax);b[i]='';best=isMax?Math.max(best,s):Math.min(best,s);}}return best; }
+function bestMove(b) { let best=-Infinity,move=-1;for(let i=0;i<9;i++){if(!b[i]){b[i]='O';const s=minimax(b,false);b[i]='';if(s>best){best=s;move=i;}}}return move; }
+function renderCell(i) { document.querySelector(`[data-i="${i}"]`).textContent = tttBoard[i]==='X'?'✕':'○'; }
+function tttMove(i) {
+  if (tttOver||tttBoard[i]) return;
+  if (tttAI&&tttTurn==='O') return;
+  tttBoard[i]=tttTurn; renderCell(i);
+  const w=checkWinner(tttBoard); if(w){endGame(w);return;}
+  tttTurn=tttTurn==='X'?'O':'X';
+  if (tttAI&&tttTurn==='O') {
+    document.getElementById('ttt-status').textContent='🤖 AI is thinking...';
+    setTimeout(() => { const m=bestMove(tttBoard);tttBoard[m]='O';renderCell(m);const w2=checkWinner(tttBoard);if(w2){endGame(w2);return;}tttTurn='X';document.getElementById('ttt-status').textContent='Your turn (X)'; }, 300);
+  } else { document.getElementById('ttt-status').textContent = tttAI?'Your turn (X)':tttTurn+"'s turn"; }
+}
+function endGame(w) {
+  tttOver=true;
+  if(w==='draw') document.getElementById('ttt-status').textContent="It's a draw!";
+  else if(tttAI) document.getElementById('ttt-status').textContent=w==='X'?'You win! 🎉':'🤖 AI wins!';
+  else document.getElementById('ttt-status').textContent=w+' wins! 🎉';
+}
+resetTTT();
+
+/* BREAKOUT */
+let breakoutRAF;
+function startBreakout() {
+  cancelAnimationFrame(breakoutRAF);
+  const canvas = document.getElementById('breakout-canvas');
+  if (window._breakoutMouseHandler) canvas.removeEventListener('mousemove', window._breakoutMouseHandler);
+  const ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height;
+  let score = 0; document.getElementById('breakout-score').textContent = 0;
+  let paddle = {x:W/2-40,y:H-20,w:80,h:8}, ball = {x:W/2,y:H-40,vx:3,vy:-3,r:7}, bricks = [];
+  for (let r=0; r<4; r++) for (let c=0; c<8; c++) bricks.push({x:10+c*48,y:30+r*22,w:42,h:16,alive:true,color:['#e03030','#c02020','#a01010','#801010'][r]});
+  window._breakoutMouseHandler = e => { const r=canvas.getBoundingClientRect(); paddle.x=e.clientX-r.left-paddle.w/2; };
+  canvas.addEventListener('mousemove', window._breakoutMouseHandler);
+  function loop() {
+    if (keysDown['ArrowLeft']) paddle.x=Math.max(0,paddle.x-5);
+    if (keysDown['ArrowRight']) paddle.x=Math.min(W-paddle.w,paddle.x+5);
+    ball.x+=ball.vx; ball.y+=ball.vy;
+    if (ball.x<ball.r||ball.x>W-ball.r) ball.vx*=-1;
+    if (ball.y<ball.r) ball.vy*=-1;
+    if (ball.y>H) { ctx.fillStyle='rgba(0,0,0,0.65)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#e03030';ctx.font='bold 18px monospace';ctx.textAlign='center';ctx.fillText('Game Over — '+score,W/2,H/2);return; }
+    if (ball.y+ball.r>=paddle.y&&ball.x>=paddle.x&&ball.x<=paddle.x+paddle.w&&ball.vy>0) ball.vy*=-1;
+    bricks.forEach(b => { if(!b.alive)return;if(ball.x>b.x&&ball.x<b.x+b.w&&ball.y>b.y&&ball.y<b.y+b.h){b.alive=false;ball.vy*=-1;score+=10;document.getElementById('breakout-score').textContent=score;} });
+    if (bricks.every(b=>!b.alive)) { ctx.fillStyle='rgba(0,0,0,0.65)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#e03030';ctx.font='bold 18px monospace';ctx.textAlign='center';ctx.fillText('You Win! '+score,W/2,H/2);return; }
+    ctx.fillStyle='#080808';ctx.fillRect(0,0,W,H);
+    bricks.forEach(b => { if(b.alive){ctx.fillStyle=b.color;ctx.fillRect(b.x,b.y,b.w,b.h);} });
+    ctx.fillStyle='#aaa';ctx.fillRect(paddle.x,paddle.y,paddle.w,paddle.h);
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fill();
+    breakoutRAF=requestAnimationFrame(loop);
+  }
+  breakoutRAF=requestAnimationFrame(loop);
+}
+
+// ============ EXPOSE ============
+window.showScreen=showScreen; window.doLogin=doLogin; window.doRegister=doRegister; window.doLogout=doLogout;
+window.switchTab=switchTab; window.showGame=showGame;
+window.startSnake=startSnake; window.startTetris=startTetris; window.resetTTT=resetTTT; window.toggleAI=toggleAI; window.startBreakout=startBreakout;
+window.setSnakeColor=setSnakeColor; window.loadFriendsTab=loadFriendsTab;
+window.handleAccept=handleAccept; window.handleDecline=handleDecline; window.handleRemove=handleRemove;
+window.searchFriend=searchFriend; window.loadMessagesTab=loadMessagesTab; window.openChat=openChat; window.sendMessage=sendMessage;
+
+// ============ INIT ============
+window.addEventListener('DOMContentLoaded', () => {
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user.email;
+      currentUsername = user.displayName || user.email.split('@')[0];
+      loadUserData().then(() => enterHub());
+    } else { doLogout(); }
+  });
+});
+</script>
+</body>
+</html>

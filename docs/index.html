@@ -11,6 +11,10 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<!-- Three.js for Admin 3D Test -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="c:\Users\User\Desktop\Skineur Secret Hub\docs\3d-test.js"></script>
+
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyCsWUVcot8Hc70na3PJm84i0xc1_rIb8KI",
@@ -66,6 +70,12 @@
   .admin-dots:hover { color: var(--red); border-color: var(--red); }
   .top-actions { display: flex; align-items: center; }
   .logout-btn:hover { color: var(--red); }
+  
+  /* 3D View Overlay */
+  #three-overlay { position: fixed; inset: 0; background: #000; z-index: 10000; display: none; flex-direction: column; }
+  #three-canvas-container { flex: 1; cursor: crosshair; }
+  .three-ui { position: absolute; top: 20px; left: 20px; color: white; font-family: 'DM Mono', monospace; pointer-events: none; text-shadow: 1px 1px 2px black; }
+  .three-exit { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.5); color: white; border: 1px solid white; padding: 0.5rem 1rem; cursor: pointer; border-radius: 8px; font-family: 'DM Sans', sans-serif; }
 
   .box { width: 100%; max-width: 720px; background: var(--surface); border: 1px solid var(--red); border-radius: 16px; box-shadow: 0 0 18px var(--red-glow), 0 0 50px rgba(224,48,48,0.15), 0 0 100px rgba(224,48,48,0.07); padding: 1.8rem; }
 
@@ -250,6 +260,7 @@
         <div class="games-soon-title">Games Coming Soon!</div>
         <div class="games-soon-sub">New games are on their way and will replace the Classic games.<br>Stay tuned — they're gonna be way better!</div>
         <div class="games-soon-badge">🚧 In Development</div>
+        <button id="admin-3d-btn" class="play-btn" style="display:none; margin-top:1.5rem;" onclick="window.start3DTest()">Admin: Test 3D Engine</button>
       </div>
     </div>
 
@@ -388,6 +399,13 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- 3D OVERLAY -->
+<div id="three-overlay">
+  <div id="three-canvas-container"></div>
+  <div class="three-ui">WASD to Walk · SPACE to Jump · ESC to Unlock Mouse</div>
+  <button class="three-exit" onclick="window.stop3DTest()">Exit Test</button>
 </div>
 
 <script>
@@ -745,6 +763,7 @@ function enterHub() {
 
   const isAdmin = currentUsername && ADMINS.includes(currentUsername.toLowerCase());
   document.getElementById('admin-btn').style.display = 'none'; // Topbar dots removed per request
+  document.getElementById('admin-3d-btn').style.display = isAdmin ? 'block' : 'none';
   if (isAdmin) earnAward('ADMIN');
 }
 
@@ -1245,6 +1264,8 @@ window.startSnake=startSnake; window.startTetris=startTetris; window.resetTTT=re
 window.setSnakeColor=setSnakeColor; window.loadFriendsTab=loadFriendsTab;
 window.handleAccept=handleAccept; window.handleDecline=handleDecline; window.handleRemove=handleRemove;
 window.searchFriend=searchFriend; window.loadMessagesTab=loadMessagesTab; window.openChat=openChat; window.sendMessage=sendMessage;
+window.start3DTest=() => { if(window.init3D) window.init3D(); else alert('3D Script not loaded'); };
+window.stop3DTest=() => { if(window.close3D) window.close3D(); };
 
 // ============ INIT ============
 window.addEventListener('DOMContentLoaded', () => {

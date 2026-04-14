@@ -74,6 +74,26 @@
   .panel { display: none; }
   .panel.active { display: block; }
 
+  /* Yellow classic banner */
+  .classic-banner {
+    display: flex; align-items: center; gap: 0.6rem;
+    background: #fbbf24; color: #1c0f00;
+    border-radius: 8px; padding: 0.6rem 1rem;
+    font-family: 'DM Mono', monospace; font-size: 0.83rem; font-weight: 600;
+    margin-bottom: 1.2rem;
+    box-shadow: 0 0 16px rgba(251,191,36,0.2);
+  }
+
+  /* New games coming soon */
+  .games-soon-wrap {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 360px; gap: 1.2rem; text-align: center;
+  }
+  .games-soon-icon { font-size: 3.5rem; }
+  .games-soon-title { font-family: 'DM Mono', monospace; font-size: 1.15rem; color: var(--text); }
+  .games-soon-sub { font-family: 'DM Mono', monospace; font-size: 0.82rem; color: var(--muted); max-width: 380px; line-height: 1.7; }
+  .games-soon-badge { background: var(--red-dim); border: 1px solid var(--red); color: var(--red); font-family: 'DM Mono', monospace; font-size: 0.78rem; padding: 0.35rem 1rem; border-radius: 99px; box-shadow: 0 0 8px var(--red-glow); }
+
   .game-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; justify-content: center; }
   .game-btn { padding: 0.4rem 0.9rem; border: 1px solid var(--border); border-radius: 99px; background: var(--tag); font-family: 'DM Mono', monospace; font-size: 0.8rem; cursor: pointer; color: var(--muted); transition: all 0.15s; }
   .game-btn.active { background: var(--red); color: white; border-color: var(--red); }
@@ -141,7 +161,9 @@
   .messages-friend-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
   .messages-friend-item:hover { background: var(--tag); }
   .messages-friend-item.active { background: var(--red-dim); }
-  .messages-friend-avatar { font-size: 1.5rem; }
+  .messages-friend-avatar { font-size: 1.5rem; display: flex; align-items: center; justify-content: center; }
+  .avatar-3d { width: 20px; height: 30px; image-rendering: pixelated; display: inline-block; vertical-align: middle; }
+  .avatar-3d-large { width: 80px; height: 128px; image-rendering: pixelated; display: block; }
   .messages-friend-name { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--text); }
   .messages-chat { flex: 1; display: flex; flex-direction: column; }
   .messages-chat-header { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--muted); padding: 1rem; border-bottom: 1px solid var(--border); background: var(--surface); }
@@ -179,8 +201,8 @@
     <div class="card-icon">✨</div>
     <h2>Create account</h2>
     <input class="field" type="email" id="reg-user" placeholder="Email" />
-    <input class="field" type="text" id="reg-username" placeholder="Username (1-20 chars, letters/numbers/_)" />
-    <input class="field" type="password" id="reg-pass" placeholder="Password" />
+    <input class="field" type="text" id="reg-username" placeholder="Username (3-20 chars, letters/numbers/_)" />
+    <input class="field" type="password" id="reg-pass" placeholder="Password (min 6 chars)" />
     <input class="field" type="password" id="reg-pass2" placeholder="Confirm password" onkeydown="if(event.key==='Enter')window.doRegister()" />
     <button class="btn-red" onclick="window.doRegister()">Register</button>
     <button class="btn-ghost" onclick="window.showScreen('screen-login')">Already have an account?</button>
@@ -198,7 +220,8 @@
   </div>
   <div class="box">
     <div class="tabs">
-      <button class="tab active" onclick="window.switchTab('games',this)">Games</button>
+      <button class="tab active" onclick="window.switchTab('games-new',this)">Games</button>
+      <button class="tab" onclick="window.switchTab('games',this)">Games (Classic)</button>
       <button class="tab" onclick="window.switchTab('profile',this)">Profile</button>
       <button class="tab" onclick="window.switchTab('search',this)">Search</button>
       <button class="tab" onclick="window.switchTab('avatar',this)">Avatar</button>
@@ -206,8 +229,19 @@
       <button class="tab" onclick="window.switchTab('messages',this)">Messages</button>
     </div>
 
-    <!-- GAMES -->
-    <div class="panel active" id="tab-games">
+    <!-- NEW GAMES (coming soon) -->
+    <div class="panel active" id="tab-games-new">
+      <div class="games-soon-wrap">
+        <div class="games-soon-icon">🕹️</div>
+        <div class="games-soon-title">Games Coming Soon!</div>
+        <div class="games-soon-sub">New games are on their way and will replace the Classic games.<br>Stay tuned — they're gonna be way better!</div>
+        <div class="games-soon-badge">🚧 In Development</div>
+      </div>
+    </div>
+
+    <!-- CLASSIC GAMES -->
+    <div class="panel" id="tab-games">
+      <div class="classic-banner">⚠️ Classic games are going away soon!</div>
       <div class="game-list">
         <button class="game-btn" onclick="window.showGame('snake',this)">Snake</button>
         <button class="game-btn" onclick="window.showGame('tetris',this)">Tetris</button>
@@ -291,10 +325,16 @@
 
     <!-- AVATAR -->
     <div class="panel" id="tab-avatar">
-      <div style="background:var(--tag);border:1px dashed #f97316;border-radius:12px;padding:2rem 2.5rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
-        <div style="font-size:2.5rem;">🚧</div>
-        <div style="font-family:'DM Mono',monospace;font-size:1rem;color:#f97316;">Avatar</div>
-        <div style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--muted);">This feature is still being worked on.<br>Check back soon!</div>
+      <div class="box" style="display:flex;flex-direction:column;align-items:center;gap:1.5rem;">
+        <div style="font-family:'DM Mono',monospace;font-size:1rem;color:var(--muted);">Your Avatar</div>
+        <img src="avatar.png" alt="Avatar" class="avatar-3d-large" style="border:2px solid var(--red);border-radius:8px;" />
+        <div style="background:var(--tag);border:1px dashed #f97316;border-radius:12px;padding:1.5rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:0.5rem;max-width:400px;">
+          <div style="font-size:2rem;">🎨</div>
+          <div style="font-family:'DM Mono',monospace;font-size:0.9rem;color:#f97316;">Customization Coming Soon</div>
+          <div style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);">
+            Soon you'll be able to customize your avatar with different hair, shirts, pants, and more - Roblox-style!
+          </div>
+        </div>
       </div>
     </div>
 
@@ -331,16 +371,18 @@
 </div>
 
 <script>
+// ============ DEFAULT AVATAR ============
+const DEFAULT_AVATAR = 'avatar.png';
+
 // ============ STATE ============
-let currentUser = null, tetrisBest = 0, snakeBestDB = 0, avatar = '👤', currentUsername = null;
+let currentUser = null, tetrisBest = 0, snakeBestDB = 0, avatar = DEFAULT_AVATAR, currentUsername = null;
 let snakeColor = '#ffffff', snakeRainbow = false;
 let currentChatFriend = null, messagesUnsub = null;
 
 // ============ CACHE ============
-// In-memory cache to avoid redundant Firestore reads
-let cachedFriends = null;           // array of emails
-let cachedRequests = null;          // {incoming:[], outgoing:[]}
-let cachedProfiles = {};            // email -> profile object
+let cachedFriends = null;
+let cachedRequests = null;
+let cachedProfiles = {};
 let friendsUnsub = null;
 let requestsUnsub = null;
 
@@ -349,35 +391,26 @@ function invalidateCache() {
   cachedRequests = null;
 }
 
-// Subscribe to friends + requests in real-time so cache stays fresh
 function subscribeFriendData() {
   if (!currentUser) return;
   if (friendsUnsub) friendsUnsub();
   if (requestsUnsub) requestsUnsub();
 
-  // Watch friendships
   const q1 = db.collection('friends').where('user1', '==', currentUser);
   const q2 = db.collection('friends').where('user2', '==', currentUser);
-
   let friends1 = [], friends2 = [];
+
   const rebuildFriends = () => {
     cachedFriends = [...new Set([...friends1, ...friends2])];
     refreshFriendsUI();
   };
 
   friendsUnsub = (() => {
-    const u1 = q1.onSnapshot(snap => {
-      friends1 = snap.docs.map(d => d.data().user2);
-      rebuildFriends();
-    });
-    const u2 = q2.onSnapshot(snap => {
-      friends2 = snap.docs.map(d => d.data().user1);
-      rebuildFriends();
-    });
+    const u1 = q1.onSnapshot(snap => { friends1 = snap.docs.map(d => d.data().user2); rebuildFriends(); });
+    const u2 = q2.onSnapshot(snap => { friends2 = snap.docs.map(d => d.data().user1); rebuildFriends(); });
     return () => { u1(); u2(); };
   })();
 
-  // Watch incoming requests
   requestsUnsub = db.collection('friendRequests')
     .where('to', '==', currentUser)
     .where('status', '==', 'pending')
@@ -393,9 +426,7 @@ function subscribeFriendData() {
 function unsubscribeFriendData() {
   if (friendsUnsub) { friendsUnsub(); friendsUnsub = null; }
   if (requestsUnsub) { requestsUnsub(); requestsUnsub = null; }
-  cachedFriends = null;
-  cachedRequests = null;
-  cachedProfiles = {};
+  cachedFriends = null; cachedRequests = null; cachedProfiles = {};
 }
 
 function updateRequestBadge(count) {
@@ -405,17 +436,11 @@ function updateRequestBadge(count) {
   badge.style.display = count > 0 ? 'inline-flex' : 'none';
 }
 
-// Refresh friends UI if the tab is currently visible
 function refreshFriendsUI() {
   const panel = document.getElementById('tab-friends');
-  if (panel && panel.classList.contains('active')) {
-    renderFriendsTab();
-  }
-  // Also refresh messages sidebar if visible
+  if (panel && panel.classList.contains('active')) renderFriendsTab();
   const msgPanel = document.getElementById('tab-messages');
-  if (msgPanel && msgPanel.classList.contains('active')) {
-    renderMessagesSidebar();
-  }
+  if (msgPanel && msgPanel.classList.contains('active')) renderMessagesSidebar();
 }
 
 // ============ PROFILE CACHE ============
@@ -425,14 +450,7 @@ async function getUserProfileByEmail(email) {
     const snap = await db.collection('users').where('email', '==', email).limit(1).get();
     if (!snap.empty) {
       const d = snap.docs[0].data();
-      const profile = {
-        username: d.username || email.split('@')[0],
-        email,
-        avatar: d.avatar || '👤',
-        snake_best: d.snake_best || 0,
-        tetris_best: d.tetris_best || 0,
-        breakout_best: d.breakout_best || 0
-      };
+      const profile = { username: d.username || email.split('@')[0], email, avatar: d.avatar || '👤', snake_best: d.snake_best || 0, tetris_best: d.tetris_best || 0, breakout_best: d.breakout_best || 0 };
       cachedProfiles[email] = profile;
       return profile;
     }
@@ -442,11 +460,9 @@ async function getUserProfileByEmail(email) {
   return fallback;
 }
 
-// Batch-fetch profiles for a list of emails
 async function batchGetProfiles(emails) {
   const missing = emails.filter(e => !cachedProfiles[e]);
   if (missing.length > 0) {
-    // Firestore 'in' query supports up to 10 items at a time
     const chunks = [];
     for (let i = 0; i < missing.length; i += 10) chunks.push(missing.slice(i, i + 10));
     for (const chunk of chunks) {
@@ -454,30 +470,11 @@ async function batchGetProfiles(emails) {
         const snap = await db.collection('users').where('email', 'in', chunk).get();
         snap.docs.forEach(doc => {
           const d = doc.data();
-          if (d.email) {
-            cachedProfiles[d.email] = {
-              username: d.username || d.email.split('@')[0],
-              email: d.email,
-              avatar: d.avatar || '👤',
-              snake_best: d.snake_best || 0,
-              tetris_best: d.tetris_best || 0,
-              breakout_best: d.breakout_best || 0
-            };
-          }
+          if (d.email) cachedProfiles[d.email] = { username: d.username || d.email.split('@')[0], email: d.email, avatar: d.avatar || '👤', snake_best: d.snake_best || 0, tetris_best: d.tetris_best || 0, breakout_best: d.breakout_best || 0 };
         });
-        // Fill in any that weren't returned
-        chunk.forEach(e => {
-          if (!cachedProfiles[e]) {
-            cachedProfiles[e] = { username: e.split('@')[0], email: e, avatar: '👤', snake_best: 0, tetris_best: 0, breakout_best: 0 };
-          }
-        });
+        chunk.forEach(e => { if (!cachedProfiles[e]) cachedProfiles[e] = { username: e.split('@')[0], email: e, avatar: '👤', snake_best: 0, tetris_best: 0, breakout_best: 0 }; });
       } catch (err) {
-        console.warn('batchGetProfiles error:', err);
-        chunk.forEach(e => {
-          if (!cachedProfiles[e]) {
-            cachedProfiles[e] = { username: e.split('@')[0], email: e, avatar: '👤', snake_best: 0, tetris_best: 0, breakout_best: 0 };
-          }
-        });
+        chunk.forEach(e => { if (!cachedProfiles[e]) cachedProfiles[e] = { username: e.split('@')[0], email: e, avatar: '👤', snake_best: 0, tetris_best: 0, breakout_best: 0 }; });
       }
     }
   }
@@ -509,10 +506,7 @@ async function getFriendRequests() {
     db.collection('friendRequests').where('to', '==', currentUser).where('status', '==', 'pending').get(),
     db.collection('friendRequests').where('from', '==', currentUser).where('status', '==', 'pending').get()
   ]);
-  cachedRequests = {
-    incoming: inc.docs.map(d => d.data().from),
-    outgoing: out.docs.map(d => d.data().to)
-  };
+  cachedRequests = { incoming: inc.docs.map(d => d.data().from), outgoing: out.docs.map(d => d.data().to) };
   return cachedRequests;
 }
 
@@ -530,26 +524,18 @@ async function sendFriendRequest(toEmail) {
   if (!currentUser || !toEmail) return;
   const status = await getFriendshipStatus(toEmail);
   if (status) return;
-  await db.collection('friendRequests').add({
-    from: currentUser, fromUsername: currentUsername, to: toEmail,
-    status: 'pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  });
+  await db.collection('friendRequests').add({ from: currentUser, fromUsername: currentUsername, to: toEmail, status: 'pending', timestamp: firebase.firestore.FieldValue.serverTimestamp() });
   invalidateCache();
 }
 
 async function acceptFriendRequest(fromEmail) {
   if (!currentUser || !fromEmail) return;
-  const snap = await db.collection('friendRequests')
-    .where('from', '==', fromEmail).where('to', '==', currentUser).where('status', '==', 'pending').limit(1).get();
+  const snap = await db.collection('friendRequests').where('from', '==', fromEmail).where('to', '==', currentUser).where('status', '==', 'pending').limit(1).get();
   if (snap.empty) return;
   const reqDoc = snap.docs[0];
   const fromUsername = reqDoc.data().fromUsername || fromEmail.split('@')[0];
   const batch = db.batch();
-  batch.set(db.collection('friends').doc(), {
-    user1: fromEmail, user2: currentUser,
-    user1Username: fromUsername, user2Username: currentUsername,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
+  batch.set(db.collection('friends').doc(), { user1: fromEmail, user2: currentUser, user1Username: fromUsername, user2Username: currentUsername, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
   batch.delete(reqDoc.ref);
   await batch.commit();
   invalidateCache();
@@ -557,8 +543,7 @@ async function acceptFriendRequest(fromEmail) {
 
 async function declineFriendRequest(fromEmail) {
   if (!currentUser || !fromEmail) return;
-  const snap = await db.collection('friendRequests')
-    .where('from', '==', fromEmail).where('to', '==', currentUser).where('status', '==', 'pending').get();
+  const snap = await db.collection('friendRequests').where('from', '==', fromEmail).where('to', '==', currentUser).where('status', '==', 'pending').get();
   const batch = db.batch();
   snap.docs.forEach(d => batch.delete(d.ref));
   await batch.commit();
@@ -576,7 +561,6 @@ async function removeFriend(otherEmail) {
   s2.docs.forEach(d => batch.delete(d.ref));
   await batch.commit();
   invalidateCache();
-  // Evict profile cache for that user so stats refresh next time
   delete cachedProfiles[otherEmail];
 }
 
@@ -597,9 +581,7 @@ async function renderMessagesSidebar() {
   });
 }
 
-async function loadMessagesTab() {
-  await renderMessagesSidebar();
-}
+async function loadMessagesTab() { await renderMessagesSidebar(); }
 
 async function openChat(event, friendEmail) {
   currentChatFriend = friendEmail;
@@ -628,9 +610,7 @@ function subscribeMessages(friendEmail) {
         div.appendChild(item);
       });
       div.scrollTop = div.scrollHeight;
-    }, err => {
-      div.innerHTML = '<div style="text-align:center;color:var(--red);">Failed to load messages.</div>';
-    });
+    }, err => { div.innerHTML = '<div style="text-align:center;color:var(--red);">Failed to load messages.</div>'; });
 }
 
 async function sendMessage() {
@@ -641,9 +621,7 @@ async function sendMessage() {
   input.value = '';
   const convId = [currentUser, currentChatFriend].sort().join('_');
   try {
-    await db.collection('conversations').doc(convId).collection('messages').add({
-      from: currentUser, text, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    await db.collection('conversations').doc(convId).collection('messages').add({ from: currentUser, text, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
   } catch (e) { alert('Failed to send message.'); }
 }
 
@@ -694,7 +672,12 @@ function enterHub() {
   document.getElementById('profile-username').textContent = name;
   document.getElementById('profile-snake').textContent = snakeBestDB;
   document.getElementById('profile-tetris').textContent = tetrisBest;
-  document.getElementById('profile-avatar').textContent = avatar;
+  const avatarEl = document.getElementById('profile-avatar');
+  if (avatar && avatar.includes('.png')) {
+    avatarEl.innerHTML = `<img src="${avatar}" class="avatar-3d" alt="Avatar" />`;
+  } else {
+    avatarEl.textContent = avatar || '👤';
+  }
   document.getElementById('tetris-best-display').textContent = tetrisBest;
   document.getElementById('snake-best-display').textContent = snakeBestDB;
   buildColorPresets();
@@ -704,7 +687,7 @@ function enterHub() {
 function doLogout() {
   if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
   unsubscribeFriendData();
-  currentUser = null; tetrisBest = 0; snakeBestDB = 0; avatar = '👤'; currentUsername = null; currentChatFriend = null;
+  currentUser = null; tetrisBest = 0; snakeBestDB = 0; avatar = DEFAULT_AVATAR; currentUsername = null; currentChatFriend = null;
   document.getElementById('main').style.display = 'none';
   document.getElementById('login-user').value = '';
   document.getElementById('login-pass').value = '';
@@ -724,7 +707,7 @@ async function loadUserData() {
       snakeBestDB = d.snake_best || 0;
       snakeColor = d.snakeColor || '#ffffff';
       snakeRainbow = snakeColor === 'rainbow';
-      avatar = d.avatar || '👤';
+      avatar = d.avatar || DEFAULT_AVATAR;
       currentUsername = d.username || currentUsername;
       document.getElementById('profile-breakout').textContent = d.breakout_best || 0;
     }
@@ -734,27 +717,62 @@ async function loadUserData() {
 async function doRegister() {
   const regErr = document.getElementById('reg-err'), regOk = document.getElementById('reg-ok');
   regErr.textContent = ''; regOk.textContent = '';
+
+  const email    = document.getElementById('reg-user').value.trim();
   const origUsername = document.getElementById('reg-username').value.trim();
   const username = origUsername.toLowerCase();
-  if (!origUsername || origUsername.length < 1 || origUsername.length > 20 || !/^[a-zA-Z0-9_]+$/.test(origUsername)) {
-    regErr.textContent = 'Username must be 1-20 chars, letters/numbers/_ only.'; return;
+  const pass     = document.getElementById('reg-pass').value;
+  const pass2    = document.getElementById('reg-pass2').value;
+
+  // Validate email
+  if (!email || !email.includes('@')) { regErr.textContent = 'Please enter a valid email.'; return; }
+
+  // Validate username (3-20 chars, alphanumeric + underscore)
+  if (!origUsername || origUsername.length < 3 || origUsername.length > 20 || !/^[a-zA-Z0-9_]+$/.test(origUsername)) {
+    regErr.textContent = 'Username must be 3-20 chars, letters/numbers/_ only.'; return;
   }
-  const pass = document.getElementById('reg-pass').value;
-  const pass2 = document.getElementById('reg-pass2').value;
-  if (pass !== pass2) { regErr.textContent = 'Passwords do not match'; return; }
-  const email = document.getElementById('reg-user').value.trim();
+
+  // Firebase requires min 6 chars for password
+  if (pass.length < 6) { regErr.textContent = 'Password must be at least 6 characters.'; return; }
+  if (pass !== pass2)  { regErr.textContent = 'Passwords do not match.'; return; }
+
   try {
+    // Check if username is already taken before creating auth account
     const existing = await db.collection('users').doc(username).get();
     if (existing.exists) { regErr.textContent = 'Username already taken.'; return; }
+
+    // Create Firebase Auth account
     const cred = await auth.createUserWithEmailAndPassword(email, pass);
     await cred.user.updateProfile({ displayName: origUsername });
+
+    // Force-refresh the token so Firestore rules see request.auth immediately
+    await cred.user.getIdToken(true);
+
+    // Write the user doc — now rules will allow it since token is fresh
     await db.collection('users').doc(username).set({
-      email, username: origUsername, snake_best: 0, tetris_best: 0, breakout_best: 0, avatar: '👤', snakeColor: '#ffffff'
+      email,
+      username: origUsername,
+      snake_best: 0,
+      tetris_best: 0,
+      breakout_best: 0,
+      avatar: '👤',
+      snakeColor: '#ffffff'
     });
-    regOk.textContent = 'Account created!';
-    currentUser = email; currentUsername = origUsername;
-    await loadUserData(); enterHub();
-  } catch (e) { regErr.textContent = e.message; }
+
+    regOk.textContent = 'Account created! Welcome 🎉';
+    currentUser = email;
+    currentUsername = origUsername;
+    await loadUserData();
+    enterHub();
+
+  } catch (e) {
+    if (e.code === 'auth/email-already-in-use')    regErr.textContent = 'That email is already registered.';
+    else if (e.code === 'auth/invalid-email')       regErr.textContent = 'Invalid email address.';
+    else if (e.code === 'auth/weak-password')       regErr.textContent = 'Password is too weak (min 6 chars).';
+    else if (e.code === 'permission-denied' || (e.message && e.message.includes('permission')))
+      regErr.textContent = 'Permission error — check Firestore rules.';
+    else regErr.textContent = e.message || 'Registration failed.';
+  }
 }
 
 async function doLogin() {
@@ -774,7 +792,11 @@ async function doLogin() {
     currentUser = cred.user.email;
     currentUsername = cred.user.displayName || cred.user.email.split('@')[0];
     await loadUserData(); enterHub();
-  } catch (e) { loginErr.textContent = e.message; }
+  } catch (e) {
+    if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') loginErr.textContent = 'Wrong password.';
+    else if (e.code === 'auth/user-not-found') loginErr.textContent = 'No account with that email.';
+    else loginErr.textContent = e.message || 'Login failed.';
+  }
 }
 
 // ============ TABS ============
@@ -800,9 +822,8 @@ function showGame(game, btn) {
 // ============ FRIENDS TAB ============
 async function renderFriendsTab() {
   const reqList = document.getElementById('friends-requests-list');
-  const fList = document.getElementById('friends-list');
+  const fList   = document.getElementById('friends-list');
   try {
-    // Requests
     const requests = cachedRequests || await getFriendRequests();
     const incoming = requests.incoming || [];
     reqList.innerHTML = '';
@@ -823,7 +844,6 @@ async function renderFriendsTab() {
     }
     updateRequestBadge(incoming.length);
 
-    // Friends list
     const friends = cachedFriends !== null ? cachedFriends : await getFriendships();
     fList.innerHTML = '';
     if (friends.length === 0) {
@@ -843,11 +863,10 @@ async function renderFriendsTab() {
     }
   } catch (e) {
     reqList.innerHTML = '<div class="friends-empty">Error loading.</div>';
-    fList.innerHTML = '<div class="friends-empty">Error loading.</div>';
+    fList.innerHTML   = '<div class="friends-empty">Error loading.</div>';
   }
 }
 
-// Keep old name as alias for compatibility
 async function loadFriendsTab() { await renderFriendsTab(); }
 
 async function handleAccept(fromEmail) {
@@ -872,7 +891,6 @@ async function searchFriend() {
   if (q.toLowerCase() === currentUsername?.toLowerCase()) { result.innerHTML = '<div class="search-err">That\'s you!</div>'; return; }
   result.innerHTML = '<div class="search-loading">Searching...</div>';
   try {
-    // Look up by username doc (lowercase key)
     const snap = await db.collection('users').doc(q.toLowerCase()).get();
     if (!snap.exists) { result.innerHTML = '<div class="search-err">User not found.</div>'; return; }
     const data = snap.data();
@@ -880,7 +898,6 @@ async function searchFriend() {
     if (!email) { result.innerHTML = '<div class="search-err">User not found.</div>'; return; }
     if (email === currentUser) { result.innerHTML = '<div class="search-err">That\'s you!</div>'; return; }
 
-    // Need to get fresh friendship status — don't rely on cache here since user just searched
     const f = cachedFriends !== null ? cachedFriends : await getFriendships();
     const r = cachedRequests !== null ? cachedRequests : await getFriendRequests();
     let status = null;
@@ -898,22 +915,18 @@ async function searchFriend() {
     info.appendChild(name); info.appendChild(stats);
     const actions = document.createElement('div'); actions.className = 'friend-row-actions';
     const btn = document.createElement('button');
-    if (status === 'accepted') { btn.className = 'btn-sm'; btn.textContent = '✓ Friends'; btn.disabled = true; }
-    else if (status === 'sent') { btn.className = 'btn-sm'; btn.textContent = '⏳ Pending'; btn.disabled = true; }
+    if (status === 'accepted')      { btn.className = 'btn-sm'; btn.textContent = '✓ Friends'; btn.disabled = true; }
+    else if (status === 'sent')     { btn.className = 'btn-sm'; btn.textContent = '⏳ Pending'; btn.disabled = true; }
     else if (status === 'received') {
       btn.className = 'btn-sm btn-sm-green'; btn.textContent = '✓ Accept';
       btn.onclick = () => handleAccept(email).then(() => searchFriend());
     } else {
       btn.className = 'btn-sm btn-sm-green'; btn.textContent = 'Add Friend';
-      btn.onclick = async () => {
-        btn.disabled = true; btn.textContent = '⏳ Pending';
-        await sendFriendRequest(email);
-      };
+      btn.onclick = async () => { btn.disabled = true; btn.textContent = '⏳ Pending'; await sendFriendRequest(email); };
     }
     actions.appendChild(btn); card.appendChild(info); card.appendChild(actions);
     result.appendChild(card);
   } catch (e) {
-    console.error('searchFriend error:', e);
     result.innerHTML = `<div class="search-err">Search failed: ${esc(e.message || 'unknown error')}</div>`;
   }
 }
@@ -928,23 +941,26 @@ window.addEventListener('keydown', e => {
 window.addEventListener('keyup', e => { keysDown[e.key] = false; });
 
 /* SNAKE */
-let snakeGame, snakeBestLocal = 0, rainbowTick = 0, snakeMoves = [], snakeFoods = [];
+let snakeGame, snakeBestLocal = 0, rainbowTick = 0;
 let snakeDir = { x: 1, y: 0 }, snakeNextDir = { x: 1, y: 0 };
+
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
   ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h);
   ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
 }
 function hsl(h, s, l) { return `hsl(${h},${s}%,${l}%)`; }
+
 function snakeKeyHandler(e) {
-  if ((e.key==='ArrowUp'||e.key==='w'||e.key==='W')&&snakeDir.y===0) { snakeNextDir={x:0,y:-1}; }
-  else if ((e.key==='ArrowDown'||e.key==='s'||e.key==='S')&&snakeDir.y===0) { snakeNextDir={x:0,y:1}; }
-  else if ((e.key==='ArrowLeft'||e.key==='a'||e.key==='A')&&snakeDir.x===0) { snakeNextDir={x:-1,y:0}; }
-  else if ((e.key==='ArrowRight'||e.key==='d'||e.key==='D')&&snakeDir.x===0) { snakeNextDir={x:1,y:0}; }
+  if ((e.key==='ArrowUp'   ||e.key==='w'||e.key==='W')&&snakeDir.y===0) snakeNextDir={x:0,y:-1};
+  else if ((e.key==='ArrowDown' ||e.key==='s'||e.key==='S')&&snakeDir.y===0) snakeNextDir={x:0,y:1};
+  else if ((e.key==='ArrowLeft' ||e.key==='a'||e.key==='A')&&snakeDir.x===0) snakeNextDir={x:-1,y:0};
+  else if ((e.key==='ArrowRight'||e.key==='d'||e.key==='D')&&snakeDir.x===0) snakeNextDir={x:1,y:0};
 }
 let snakeKeyAttached = false;
+
 function startSnake() {
-  clearInterval(snakeGame); snakeMoves = []; snakeFoods = []; rainbowTick = 0;
+  clearInterval(snakeGame); rainbowTick = 0;
   snakeDir = { x:1, y:0 }; snakeNextDir = { x:1, y:0 };
   if (!snakeKeyAttached) { window.addEventListener('keydown', snakeKeyHandler); snakeKeyAttached = true; }
   const canvas = document.getElementById('snake-canvas'), ctx = canvas.getContext('2d');
@@ -978,7 +994,7 @@ function startSnake() {
     ctx.fillText('🍎', food.x*size+size/2, food.y*size+size/2);
     snake.forEach((s, i) => {
       const pad = i===0?1:2, r = i===0?6:5;
-      if (snakeRainbow) { ctx.fillStyle = hsl((rainbowTick*6+i*20)%360, 100, 60); }
+      if (snakeRainbow) ctx.fillStyle = hsl((rainbowTick*6+i*20)%360, 100, 60);
       else { ctx.globalAlpha = Math.max(0.3, 1-i*0.04); ctx.fillStyle = snakeColor; }
       roundRect(ctx, s.x*size+pad, s.y*size+pad, size-pad*2, size-pad*2, r); ctx.fill(); ctx.globalAlpha = 1;
       if (i === 0) {
@@ -995,17 +1011,19 @@ function startSnake() {
 let tetrisRAF, tetrisCurrentScore = 0;
 const PIECES = [[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]],[[1,1,0],[0,1,1]],[[0,1,1],[1,1,0]]];
 const TCOLORS = ['#00f5ff','#ffd700','#a855f7','#f97316','#3b82f6','#22c55e','#ef4444'];
+
 function startTetris() {
   cancelAnimationFrame(tetrisRAF); tetrisCurrentScore = 0;
   const canvas = document.getElementById('tetris-canvas'), ctx = canvas.getContext('2d');
   const W = 10, H = 20, BS = 20;
   let board = Array.from({length:H}, () => Array(W).fill(0));
-  let cb = Array.from({length:H}, () => Array(W).fill(null));
-  let ts = 0; document.getElementById('tetris-score').textContent = 0;
+  let cb    = Array.from({length:H}, () => Array(W).fill(null));
+  let ts = 0;
+  document.getElementById('tetris-score').textContent = 0;
   document.getElementById('tetris-best-display').textContent = tetrisBest;
   let pi = Math.floor(Math.random()*7), piece = PIECES[pi], color = TCOLORS[pi], px = 3, py = 0, lt = 0;
   const rotate = p => p[0].map((_,i) => p.map(r => r[i])).map(r => r.reverse());
-  const valid = (p,x,y) => p.every((row,dy) => row.every((v,dx) => !v||(y+dy>=0&&y+dy<H&&x+dx>=0&&x+dx<W&&!board[y+dy][x+dx])));
+  const valid  = (p,x,y) => p.every((row,dy) => row.every((v,dx) => !v||(y+dy>=0&&y+dy<H&&x+dx>=0&&x+dx<W&&!board[y+dy][x+dx])));
   function lock() {
     piece.forEach((row,dy) => row.forEach((v,dx) => { if(v) { board[py+dy][px+dx]=1; cb[py+dy][px+dx]=color; } }));
     for (let r=H-1; r>=0; r--) {
@@ -1028,10 +1046,10 @@ function startTetris() {
   }
   if (window._tetrisKeyHandler) window.removeEventListener('keydown', window._tetrisKeyHandler);
   window._tetrisKeyHandler = e => {
-    if (e.key==='ArrowLeft'&&valid(piece,px-1,py)) px--;
+    if (e.key==='ArrowLeft' &&valid(piece,px-1,py)) px--;
     else if (e.key==='ArrowRight'&&valid(piece,px+1,py)) px++;
-    else if (e.key==='ArrowDown'&&valid(piece,px,py+1)) py++;
-    else if (e.key==='ArrowUp') { const r=rotate(piece); if(valid(r,px,py)) piece=r; }
+    else if (e.key==='ArrowDown' &&valid(piece,px,py+1)) py++;
+    else if (e.key==='ArrowUp')   { const r=rotate(piece); if(valid(r,px,py)) piece=r; }
   };
   window.addEventListener('keydown', window._tetrisKeyHandler);
   function loop(t) {
@@ -1050,9 +1068,9 @@ function toggleAI() {
   tttAI = !tttAI;
   const btn = document.getElementById('ai-toggle');
   btn.textContent = tttAI ? '🤖 AI: ON' : '🤖 AI: OFF';
-  btn.style.background = tttAI ? 'var(--red)' : '';
-  btn.style.color = tttAI ? 'white' : '';
-  btn.style.borderColor = tttAI ? 'var(--red)' : '';
+  btn.style.background   = tttAI ? 'var(--red)' : '';
+  btn.style.color        = tttAI ? 'white' : '';
+  btn.style.borderColor  = tttAI ? 'var(--red)' : '';
   resetTTT();
 }
 function resetTTT() {
@@ -1098,7 +1116,7 @@ function startBreakout() {
   window._breakoutMouseHandler = e => { const r=canvas.getBoundingClientRect(); paddle.x=e.clientX-r.left-paddle.w/2; };
   canvas.addEventListener('mousemove', window._breakoutMouseHandler);
   function loop() {
-    if (keysDown['ArrowLeft']) paddle.x=Math.max(0,paddle.x-5);
+    if (keysDown['ArrowLeft'])  paddle.x=Math.max(0,paddle.x-5);
     if (keysDown['ArrowRight']) paddle.x=Math.min(W-paddle.w,paddle.x+5);
     ball.x+=ball.vx; ball.y+=ball.vy;
     if (ball.x<ball.r||ball.x>W-ball.r) ball.vx*=-1;

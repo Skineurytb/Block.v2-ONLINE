@@ -129,8 +129,14 @@
   .profile-stat { background: var(--tag); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.2rem; display: flex; align-items: center; justify-content: space-between; }
   .profile-stat .label { font-family: 'DM Mono', monospace; font-size: 0.85rem; color: var(--muted); }
   .profile-stat .value { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: var(--text); font-weight: 500; }
+  
   .awards-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
-  .award-tag { background: var(--red-dim); border: 1px solid var(--red); color: var(--red); font-family: 'DM Mono', monospace; font-size: 0.65rem; padding: 0.2rem 0.5rem; border-radius: 4px; text-transform: uppercase; font-weight: 600; }
+  .award-tag { background: var(--tag); border: 1px dashed var(--muted); color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.75rem; padding: 0.4rem 0.7rem; border-radius: 6px; text-transform: uppercase; font-weight: 500; }
+
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-left: 6px; }
+  .status-online { background-color: #22c55e; box-shadow: 0 0 5px #22c55e; }
+  .status-offline { background-color: #666; }
+
   .search-row { display: flex; gap: 0.5rem; }
   .search-input { flex: 1; padding: 0.6rem 1rem; background: #0f0f0f; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.85rem; outline: none; transition: border-color 0.15s; }
   .search-input:focus { border-color: var(--red); box-shadow: 0 0 8px var(--red-glow); }
@@ -486,7 +492,7 @@ async function getUserProfileByEmail(email) {
     const snap = await db.collection('users').where('email', '==', email).limit(1).get();
     if (!snap.empty) {
       const d = snap.docs[0].data();
-      const profile = { username: d.username || email.split('@')[0], email, avatar: d.avatar || '👤', snake_best: d.snake_best || 0, tetris_best: d.tetris_best || 0, breakout_best: d.breakout_best || 0 };
+      const profile = { username: d.username || email.split('@')[0], email, avatar: d.avatar || '👤', snake_best: d.snake_best || 0, tetris_best: d.tetris_best || 0, breakout_best: d.breakout_best || 0, status: d.status || 'offline' };
       cachedProfiles[email] = profile;
       return profile;
     }
@@ -506,7 +512,7 @@ async function batchGetProfiles(emails) {
         const snap = await db.collection('users').where('email', 'in', chunk).get();
         snap.docs.forEach(doc => {
           const d = doc.data();
-          if (d.email) cachedProfiles[d.email] = { username: d.username || d.email.split('@')[0], email: d.email, avatar: d.avatar || '👤', snake_best: d.snake_best || 0, tetris_best: d.tetris_best || 0, breakout_best: d.breakout_best || 0 };
+          if (d.email) cachedProfiles[d.email] = { username: d.username || d.email.split('@')[0], email: d.email, avatar: d.avatar || '👤', snake_best: d.snake_best || 0, tetris_best: d.tetris_best || 0, breakout_best: d.breakout_best || 0, status: d.status || 'offline' };
         });
         chunk.forEach(e => { if (!cachedProfiles[e]) cachedProfiles[e] = { username: e.split('@')[0], email: e, avatar: '👤', snake_best: 0, tetris_best: 0, breakout_best: 0 }; });
       } catch (err) {
@@ -709,7 +715,11 @@ function renderAwards() {
 // ============ SCREENS ============
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-  document.getElementById(id)?.classList.remove('hidden');
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.remove('hidden');
+    el.style.display = ''; // Reset inline style set by enterHub
+  }
 }
 
 function enterHub() {
@@ -731,21 +741,22 @@ function enterHub() {
   buildColorPresets();
   renderAwards();
   subscribeFriendData();
+  if (currentUsername) db.collection('users').doc(currentUsername.toLowerCase()).update({ status: 'online' }).catch(() => {});
 
-  const isAdmin = ADMINS.includes(name.toLowerCase());
-  document.getElementById('admin-btn').style.display = isAdmin ? 'flex' : 'none';
+  const isAdmin = currentUsername && ADMINS.includes(currentUsername.toLowerCase());
+  document.getElementById('admin-btn').style.display = 'none'; // Topbar dots removed per request
   if (isAdmin) earnAward('ADMIN');
 }
 
 function doLogout() {
+  if (currentUsername) db.collection('users').doc(currentUsername.toLowerCase()).update({ status: 'offline' }).catch(() => {});
   if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
   unsubscribeFriendData();
   currentUser = null; tetrisBest = 0; snakeBestDB = 0; avatar = DEFAULT_AVATAR; currentUsername = null; currentChatFriend = null; userAwards = [];
   document.getElementById('main').style.display = 'none';
   document.getElementById('login-user').value = '';
   document.getElementById('login-pass').value = '';
-  const login = document.getElementById('screen-login');
-  login.classList.remove('hidden'); login.style.display = '';
+  showScreen('screen-login');
   auth.signOut().catch(() => {});
 }
 
@@ -918,12 +929,14 @@ async function renderFriendsTab() {
       const profiles = await batchGetProfiles(friends);
       profiles.forEach((p, i) => {
         const email = friends[i];
+        const isAdmin = currentUsername && ADMINS.includes(currentUsername.toLowerCase());
+        const admBtn = isAdmin ? `<button class="btn-sm" onclick="alert('ADMIN INFO\\nEmail: ${esc(email)}')">⋮</button>` : '';
+        const statusClass = p.status === 'online' ? 'status-online' : 'status-offline';
         const row = document.createElement('div'); row.className = 'friend-row';
         row.innerHTML = `<div class="friend-row-info">
-          <div class="friend-row-name">${esc(p.avatar)} ${esc(p.username)}</div>
-          <div class="friend-row-stats"><span>🐍 ${p.snake_best}</span><span>🏆 ${p.tetris_best}</span></div>
+          <div class="friend-row-name">${esc(p.avatar)} ${esc(p.username)} <span class="status-dot ${statusClass}"></span></div>
         </div>
-        <div class="friend-row-actions"><button class="btn-sm btn-sm-red" onclick="window.handleRemove('${esc(email)}')">Remove</button></div>`;
+        <div class="friend-row-actions">${admBtn}<button class="btn-sm btn-sm-red" onclick="window.handleRemove('${esc(email)}')">Remove</button></div>`;
         fList.appendChild(row);
       });
     }
@@ -975,11 +988,19 @@ async function searchFriend() {
     const card = document.createElement('div'); card.className = 'friend-row';
     const info = document.createElement('div'); info.className = 'friend-row-info';
     const name = document.createElement('div'); name.className = 'friend-row-name';
-    name.textContent = `${data.avatar || '👤'} ${data.username || q}`;
-    const stats = document.createElement('div'); stats.className = 'friend-row-stats';
-    stats.innerHTML = `<span>🐍 ${data.snake_best || 0}</span><span>🏆 ${data.tetris_best || 0}</span>`;
-    info.appendChild(name); info.appendChild(stats);
+    const statusClass = data.status === 'online' ? 'status-online' : 'status-offline';
+    name.innerHTML = `${data.avatar || '👤'} ${data.username || q} <span class="status-dot ${statusClass}"></span>`;
+    info.appendChild(name);
     const actions = document.createElement('div'); actions.className = 'friend-row-actions';
+    
+    if (currentUsername && ADMINS.includes(currentUsername.toLowerCase())) {
+      const admBtn = document.createElement('button');
+      admBtn.className = 'btn-sm';
+      admBtn.textContent = '⋮';
+      admBtn.onclick = () => alert(`ADMIN INFO\nEmail: ${email}`);
+      actions.appendChild(admBtn);
+    }
+
     const btn = document.createElement('button');
     if (status === 'accepted')      { btn.className = 'btn-sm'; btn.textContent = '✓ Friends'; btn.disabled = true; }
     else if (status === 'sent')     { btn.className = 'btn-sm'; btn.textContent = '⏳ Pending'; btn.disabled = true; }

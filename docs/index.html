@@ -183,8 +183,13 @@
   .messages-friend-item:hover { background: var(--tag); }
   .messages-friend-item.active { background: var(--red-dim); }
   .messages-friend-avatar { font-size: 1.5rem; display: flex; align-items: center; justify-content: center; }
-  .avatar-3d { width: 20px; height: 30px; image-rendering: pixelated; display: inline-block; vertical-align: middle; }
-  .avatar-3d-large { width: 80px; height: 128px; image-rendering: pixelated; display: block; }
+  .char-mugshot { width: 20px; height: 20px; background: #f5f5dc; border: 1px solid #dcdcaa; border-radius: 2px; display: inline-block; vertical-align: middle; margin-right: 5px; }
+  .char-full { display: flex; flex-direction: column; align-items: center; padding: 20px; margin-top: 1rem; transform: scale(1.2); }
+  .char-head-ui { width: 30px; height: 30px; background: #f5f5dc; border: 1px solid #dcdcaa; }
+  .char-row { display: flex; }
+  .char-arm-ui { width: 15px; height: 50px; background: #f5f5dc; border: 1px solid #dcdcaa; }
+  .char-torso-ui { width: 40px; height: 50px; background: #ffffff; border: 1px solid #ccc; }
+  .char-leg-ui { width: 20px; height: 50px; background: #0000ff; border: 1px solid #0000cc; }
   .messages-friend-name { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--text); }
   .messages-chat { flex: 1; display: flex; flex-direction: column; }
   .messages-chat-header { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--muted); padding: 1rem; border-bottom: 1px solid var(--border); background: var(--surface); }
@@ -358,7 +363,17 @@
     <div class="panel" id="tab-avatar">
       <div class="box" style="display:flex;flex-direction:column;align-items:center;gap:1.5rem;">
         <div style="font-family:'DM Mono',monospace;font-size:1rem;color:var(--muted);">Your Avatar</div>
-        <img src="avatar.png" alt="Avatar" class="avatar-3d-large" style="border:2px solid var(--red);border-radius:8px;" />
+        <div class="avatar-container" style="border:2px solid var(--red);border-radius:8px; padding: 1rem; background: var(--tag);">
+          <div class="char-full">
+            <div class="char-head-ui"></div>
+            <div class="char-row">
+              <div class="char-arm-ui"></div><div class="char-torso-ui"></div><div class="char-arm-ui"></div>
+            </div>
+            <div class="char-row">
+              <div class="char-leg-ui" style="border-right:none"></div><div class="char-leg-ui"></div>
+            </div>
+          </div>
+        </div>
         <div style="background:var(--tag);border:1px dashed #f97316;border-radius:12px;padding:1.5rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:0.5rem;max-width:400px;">
           <div style="font-size:2rem;">🎨</div>
           <div style="font-family:'DM Mono',monospace;font-size:0.9rem;color:#f97316;">Customization Coming Soon</div>
@@ -404,7 +419,7 @@
 <!-- 3D OVERLAY -->
 <div id="three-overlay">
   <div id="three-canvas-container"></div>
-  <div class="three-ui">WASD to Walk · SPACE to Jump · SCROLL to Zoom · ESC to Unlock Mouse</div>
+  <div class="three-ui"></div>
   <button class="three-exit" onclick="window.stop3DTest()">Exit Test</button>
 </div>
 
@@ -427,6 +442,11 @@ const AWARD_MAP = {
 let currentUser = null, tetrisBest = 0, snakeBestDB = 0, avatar = DEFAULT_AVATAR, currentUsername = null, userAwards = [];
 let snakeColor = '#ffffff', snakeRainbow = false;
 let currentChatFriend = null, messagesUnsub = null;
+
+// ============ AVATAR RENDERER ============
+function renderCharMugshot() {
+  return `<div class="char-mugshot"></div>`;
+}
 
 // ============ CACHE ============
 let cachedFriends = null;
@@ -636,7 +656,7 @@ async function renderMessagesSidebar() {
     const item = document.createElement('div');
     item.className = 'messages-friend-item' + (currentChatFriend === email ? ' active' : '');
     item.addEventListener('click', e => openChat(e, email));
-    item.innerHTML = `<div class="messages-friend-avatar">${esc(p.avatar || '👤')}</div><div class="messages-friend-name">${esc(p.username || email)}</div>`;
+    item.innerHTML = `<div class="messages-friend-avatar">${renderCharMugshot()}</div><div class="messages-friend-name">${esc(p.username || email)}</div>`;
     list.appendChild(item);
   });
 }
@@ -748,12 +768,7 @@ function enterHub() {
   document.getElementById('profile-username').textContent = name;
   document.getElementById('profile-snake').textContent = snakeBestDB;
   document.getElementById('profile-tetris').textContent = tetrisBest;
-  const avatarEl = document.getElementById('profile-avatar');
-  if (avatar && avatar.includes('.png')) {
-    avatarEl.innerHTML = `<img src="${avatar}" class="avatar-3d" alt="Avatar" />`;
-  } else {
-    avatarEl.textContent = avatar || '👤';
-  }
+  document.getElementById('profile-avatar').innerHTML = renderCharMugshot();
   document.getElementById('tetris-best-display').textContent = tetrisBest;
   document.getElementById('snake-best-display').textContent = snakeBestDB;
   buildColorPresets();
@@ -953,7 +968,7 @@ async function renderFriendsTab() {
         const statusClass = p.status === 'online' ? 'status-online' : 'status-offline';
         const row = document.createElement('div'); row.className = 'friend-row';
         row.innerHTML = `<div class="friend-row-info">
-          <div class="friend-row-name">${esc(p.avatar)} ${esc(p.username)} <span class="status-dot ${statusClass}"></span></div>
+          <div class="friend-row-name">${renderCharMugshot()} ${esc(p.username)} <span class="status-dot ${statusClass}"></span></div>
         </div>
         <div class="friend-row-actions">${admBtn}<button class="btn-sm btn-sm-red" onclick="window.handleRemove('${esc(email)}')">Remove</button></div>`;
         fList.appendChild(row);
@@ -1008,7 +1023,7 @@ async function searchFriend() {
     const info = document.createElement('div'); info.className = 'friend-row-info';
     const name = document.createElement('div'); name.className = 'friend-row-name';
     const statusClass = data.status === 'online' ? 'status-online' : 'status-offline';
-    name.innerHTML = `${data.avatar || '👤'} ${data.username || q} <span class="status-dot ${statusClass}"></span>`;
+    name.innerHTML = `${renderCharMugshot()} ${data.username || q} <span class="status-dot ${statusClass}"></span>`;
     info.appendChild(name);
     const actions = document.createElement('div'); actions.className = 'friend-row-actions';
     

@@ -1,3 +1,8 @@
+// ============ AVATAR RENDERER ============
+function renderCharMugshot() {
+  return `<div class="char-mugshot"></div>`;
+}
+
 // ============ FRIEND SYSTEM (Using Backend API) ============
 
 async function getFriendships() {
@@ -103,11 +108,8 @@ async function loadMessagesTab() {
       const item = document.createElement('div');
       item.className = 'messages-friend-item';
       item.addEventListener('click', (event) => openChat(event, friend.email));
-      const avatarImg = friend.avatar && friend.avatar.includes('.png')
-        ? `<img src="${friend.avatar}" class="avatar-3d" alt="Avatar" />`
-        : '👤';
       item.innerHTML = `
-        <div class="messages-friend-avatar">${avatarImg}</div>
+        <div class="messages-friend-avatar">${renderCharMugshot()}</div>
         <div class="messages-friend-name">${escapeHtml(friend.username || friend.email.split('@')[0])}</div>
       `;
       friendsList.appendChild(item);
@@ -222,12 +224,9 @@ async function loadFriendsTab() {
       for (const req of incoming) {
         const row = document.createElement('div');
         row.className = 'friend-row';
-        const avatarImg = req.avatar && req.avatar.includes('.png')
-          ? `<img src="${req.avatar}" class="avatar-3d" alt="Avatar" style="width:20px;height:30px;image-rendering:pixelated;"/>`
-          : '👤';
         row.innerHTML = `
           <div class="friend-row-info">
-            <div class="friend-row-name">${avatarImg} ${escapeHtml(req.username || req.email.split('@')[0])}</div>
+            <div class="friend-row-name">${renderCharMugshot()} ${escapeHtml(req.username || req.email.split('@')[0])}</div>
           </div>
           <div class="friend-row-actions">
             <button class="btn-sm btn-sm-green" onclick="window.handleAccept('${escapeHtml(req.email)}')">Accept</button>
@@ -254,12 +253,9 @@ async function loadFriendsTab() {
       for (const friend of friends) {
         const row = document.createElement('div');
         row.className = 'friend-row';
-        const avatarImg = friend.avatar && friend.avatar.includes('.png')
-          ? `<img src="${friend.avatar}" class="avatar-3d" alt="Avatar" style="width:20px;height:30px;image-rendering:pixelated;"/>`
-          : '👤';
         row.innerHTML = `
           <div class="friend-row-info">
-            <div class="friend-row-name">${avatarImg} ${escapeHtml(friend.username || friend.email.split('@')[0])}</div>
+            <div class="friend-row-name">${renderCharMugshot()} ${escapeHtml(friend.username || friend.email.split('@')[0])}</div>
             <div class="friend-row-stats">
               <span>Email: ${escapeHtml(friend.email)}</span>
             </div>
@@ -381,7 +377,7 @@ async function searchFriend() {
 
     const name = document.createElement('div');
     name.className = 'friend-row-name';
-    name.innerHTML = `${avatarDisplay} ${displayUsername}`;
+    name.innerHTML = `${renderCharMugshot()} ${displayUsername}`;
     
     const stats = document.createElement('div');
     stats.className = 'friend-row-stats';

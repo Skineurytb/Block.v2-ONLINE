@@ -65,8 +65,8 @@ window.init3D = function() {
     new THREE.MeshStandardMaterial({map: headTex}), // Back
     new THREE.MeshStandardMaterial({map: faceTex}), // Front
   ];
-  headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), headMats);
-  headMesh.position.y = 2.25;
+  headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), headMats);
+  headMesh.position.y = 2.35;
   playerCharacter.add(headMesh);
 
   // Arms (Beige)
@@ -217,7 +217,7 @@ function animate() {
   playerCharacter.rotation.y = rotation.y;
 
   // Character Head Rotation
-  if (headMesh) headMesh.rotation.x = rotation.x;
+  if (headMesh) headMesh.rotation.x = -rotation.x;
 
   // Character Animations
   const time = clock.elapsedTime;

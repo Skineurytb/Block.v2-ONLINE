@@ -1,9 +1,9 @@
 // ============ ADMIN 3D TEST ENGINE ============
-let scene, camera, renderer, clock, playerCharacter, armLGroup, armRGroup;
+let scene, camera, renderer, clock, playerCharacter, armLGroup, armRGroup, onWheel;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, canJump = false;
 let velocity = new THREE.Vector3();
 let direction = new THREE.Vector3();
-let isThirdPerson = false;
+let zoomDist = 0; // 0 is First Person
 
 window.init3D = function() {
   document.getElementById('three-overlay').style.display = 'flex';
@@ -40,14 +40,14 @@ window.init3D = function() {
   const armLMesh = new THREE.Mesh(armGeo, armMat);
   armLMesh.position.y = -0.5; // Offset so pivot is at top of arm
   armLGroup.add(armLMesh);
-  armLGroup.position.set(-0.6, 2, 0); // Position at shoulder
+  armLGroup.position.set(-0.575, 2, 0); // Position at shoulder (no gap)
   playerCharacter.add(armLGroup);
 
   armRGroup = new THREE.Group();
   const armRMesh = new THREE.Mesh(armGeo, armMat);
   armRMesh.position.y = -0.5;
   armRGroup.add(armRMesh);
-  armRGroup.position.set(0.6, 2, 0);
+  armRGroup.position.set(0.575, 2, 0);
   playerCharacter.add(armRGroup);
 
   // Legs (Blue)
@@ -83,7 +83,6 @@ window.init3D = function() {
       case 'ArrowDown': case 'KeyS': moveBackward = true; break;
       case 'ArrowRight': case 'KeyD': moveRight = true; break;
       case 'Space': if (canJump) { velocity.y = 12; canJump = false; } break;
-      case 'KeyC': isThirdPerson = !isThirdPerson; playerCharacter.visible = isThirdPerson; break;
     }
   };
   const onKeyUp = (e) => {
@@ -97,6 +96,12 @@ window.init3D = function() {
 
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
+
+  onWheel = (e) => {
+    zoomDist = Math.max(0, Math.min(15, zoomDist + e.deltaY * 0.01));
+    e.preventDefault();
+  };
+  window.addEventListener('wheel', onWheel, { passive: false });
   
   clock = new THREE.Clock();
   animate();
@@ -118,7 +123,7 @@ document.addEventListener('mousemove', (e) => {
   rotation.y -= e.movementX * 0.002;
   rotation.x -= e.movementY * 0.002;
   rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotation.x));
-  if (!isThirdPerson) camera.rotation.set(rotation.x, rotation.y, 0, 'YXZ');
+  if (zoomDist < 0.5) camera.rotation.set(rotation.x, rotation.y, 0, 'YXZ');
 });
 
 function animate() {
@@ -163,8 +168,8 @@ function animate() {
 
   if (!canJump) {
     // Jumping: Raise arms
-    armLGroup.rotation.x = -2.5; 
-    armRGroup.rotation.x = -2.5;
+    armLGroup.rotation.x = 2.5; 
+    armRGroup.rotation.x = 2.5;
   } else if (isWalking) {
     // Walking: Swing arms back and forth
     armLGroup.rotation.x = Math.sin(time * 10) * 0.8;
@@ -176,11 +181,15 @@ function animate() {
   }
 
   // Camera following logic
+  const isThirdPerson = zoomDist > 0.5;
+  playerCharacter.visible = isThirdPerson;
+
   if (!isThirdPerson) {
     camera.position.copy(playerCharacter.position);
     camera.position.y += 2.2; // Head height
   } else {
-    const relativeCameraOffset = new THREE.Vector3(0, 3, 6);
+    // Dynamically calculate offset based on zoom distance
+    const relativeCameraOffset = new THREE.Vector3(0, 1 + zoomDist * 0.3, zoomDist);
     const cameraOffset = relativeCameraOffset.applyMatrix4(playerCharacter.matrixWorld);
     camera.position.x = cameraOffset.x;
     camera.position.y = cameraOffset.y;

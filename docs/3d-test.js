@@ -1,8 +1,9 @@
 // ============ ADMIN 3D TEST ENGINE ============
-let scene, camera, renderer, clock, controls;
+let scene, camera, renderer, clock, playerCharacter;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, canJump = false;
 let velocity = new THREE.Vector3();
 let direction = new THREE.Vector3();
+let isThirdPerson = false;
 
 window.init3D = function() {
   document.getElementById('three-overlay').style.display = 'flex';
@@ -12,12 +13,43 @@ window.init3D = function() {
   scene.fog = new THREE.Fog(0x87CEEB, 0, 500);
 
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.y = 2; // Eyes height
 
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.getElementById('three-canvas-container').appendChild(renderer.domElement);
+
+  // Character Model
+  playerCharacter = new THREE.Group();
+  
+  // Torso (White)
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1, 0.4), new THREE.MeshStandardMaterial({color: 0xffffff}));
+  torso.position.y = 1.5;
+  playerCharacter.add(torso);
+
+  // Head (Beige)
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({color: 0xf5f5dc}));
+  head.position.y = 2.25;
+  playerCharacter.add(head);
+
+  // Arms (Beige)
+  const armL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1, 0.3), new THREE.MeshStandardMaterial({color: 0xf5f5dc}));
+  armL.position.set(-0.55, 1.5, 0);
+  playerCharacter.add(armL);
+  const armR = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1, 0.3), new THREE.MeshStandardMaterial({color: 0xf5f5dc}));
+  armR.position.set(0.55, 1.5, 0);
+  playerCharacter.add(armR);
+
+  // Legs (Blue)
+  const legL = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1, 0.35), new THREE.MeshStandardMaterial({color: 0x0000ff}));
+  legL.position.set(-0.2, 0.5, 0);
+  playerCharacter.add(legL);
+  const legR = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1, 0.35), new THREE.MeshStandardMaterial({color: 0x0000ff}));
+  legR.position.set(0.2, 0.5, 0);
+  playerCharacter.add(legR);
+
+  scene.add(playerCharacter);
+  playerCharacter.visible = false; // Start in 1st person
 
   // Simple Plane (The Plate)
   const grid = new THREE.GridHelper(100, 50, 0x000000, 0x555555);
@@ -40,7 +72,8 @@ window.init3D = function() {
       case 'ArrowLeft': case 'KeyA': moveLeft = true; break;
       case 'ArrowDown': case 'KeyS': moveBackward = true; break;
       case 'ArrowRight': case 'KeyD': moveRight = true; break;
-      case 'Space': if (canJump) velocity.y += 15; canJump = false; break;
+      case 'Space': if (canJump) { velocity.y = 12; canJump = false; } break;
+      case 'KeyC': isThirdPerson = !isThirdPerson; playerCharacter.visible = isThirdPerson; break;
     }
   };
   const onKeyUp = (e) => {
@@ -75,7 +108,7 @@ document.addEventListener('mousemove', (e) => {
   rotation.y -= e.movementX * 0.002;
   rotation.x -= e.movementY * 0.002;
   rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotation.x));
-  camera.rotation.set(rotation.x, rotation.y, 0, 'YXZ');
+  if (!isThirdPerson) camera.rotation.set(rotation.x, rotation.y, 0, 'YXZ');
 });
 
 function animate() {
@@ -85,22 +118,51 @@ function animate() {
 
   velocity.x -= velocity.x * 10.0 * delta;
   velocity.z -= velocity.z * 10.0 * delta;
-  velocity.y -= 9.8 * 4.0 * delta; // Gravity
+  velocity.y -= 9.8 * 3.5 * delta; // Gravity
 
   direction.z = Number(moveForward) - Number(moveBackward);
-  direction.x = Number(moveRight) - Number(moveLeft);
+  direction.x = Number(moveLeft) - Number(moveRight);
   direction.normalize();
 
-  if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
-  if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
+  // Calculate movement direction relative to camera, but ignore pitch (vertical tilt)
+  if (moveForward || moveBackward || moveLeft || moveRight) {
+    const camForward = new THREE.Vector3(0, 0, -1);
+    camForward.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotation.y);
+    camForward.normalize();
 
-  camera.translateX(-velocity.x * delta);
-  camera.translateZ(velocity.z * delta);
-  camera.position.y += (velocity.y * delta);
+    const camRight = new THREE.Vector3();
+    camRight.crossVectors(camForward, new THREE.Vector3(0, 1, 0)).normalize();
 
-  if (camera.position.y < 2) {
+    const moveDir = new THREE.Vector3();
+    moveDir.addScaledVector(camForward, direction.z);
+    moveDir.addScaledVector(camRight, -direction.x);
+    moveDir.normalize();
+
+    velocity.x += moveDir.x * 150.0 * delta;
+    velocity.z += moveDir.z * 150.0 * delta;
+  }
+
+  playerCharacter.position.x += velocity.x * delta;
+  playerCharacter.position.z += velocity.z * delta;
+  playerCharacter.position.y += velocity.y * delta;
+  playerCharacter.rotation.y = rotation.y;
+
+  // Camera following logic
+  if (!isThirdPerson) {
+    camera.position.copy(playerCharacter.position);
+    camera.position.y += 2.2; // Head height
+  } else {
+    const relativeCameraOffset = new THREE.Vector3(0, 3, 6);
+    const cameraOffset = relativeCameraOffset.applyMatrix4(playerCharacter.matrixWorld);
+    camera.position.x = cameraOffset.x;
+    camera.position.y = cameraOffset.y;
+    camera.position.z = cameraOffset.z;
+    camera.lookAt(playerCharacter.position.x, playerCharacter.position.y + 1.5, playerCharacter.position.z);
+  }
+
+  if (playerCharacter.position.y < 0) {
     velocity.y = 0;
-    camera.position.y = 2;
+    playerCharacter.position.y = 0;
     canJump = true;
   }
 

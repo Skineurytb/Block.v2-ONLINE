@@ -1,5 +1,5 @@
 // ============ ADMIN 3D TEST ENGINE ============
-let scene, camera, renderer, clock, playerCharacter, armLGroup, armRGroup, onWheel;
+let scene, camera, renderer, clock, playerCharacter, armLGroup, armRGroup, legLGroup, legRGroup, onWheel;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, canJump = false;
 let velocity = new THREE.Vector3();
 let direction = new THREE.Vector3();
@@ -51,12 +51,22 @@ window.init3D = function() {
   playerCharacter.add(armRGroup);
 
   // Legs (Blue)
-  const legL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1, 0.4), new THREE.MeshStandardMaterial({color: 0x0000ff}));
-  legL.position.set(-0.2, 0.5, 0);
-  playerCharacter.add(legL);
-  const legR = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1, 0.4), new THREE.MeshStandardMaterial({color: 0x0000ff}));
-  legR.position.set(0.2, 0.5, 0);
-  playerCharacter.add(legR);
+  const legGeo = new THREE.BoxGeometry(0.4, 1, 0.4);
+  const legMat = new THREE.MeshStandardMaterial({color: 0x0000ff});
+
+  legLGroup = new THREE.Group();
+  const legLMesh = new THREE.Mesh(legGeo, legMat);
+  legLMesh.position.y = -0.5; // Pivot at top
+  legLGroup.add(legLMesh);
+  legLGroup.position.set(-0.2, 1, 0); // Position at hip
+  playerCharacter.add(legLGroup);
+
+  legRGroup = new THREE.Group();
+  const legRMesh = new THREE.Mesh(legGeo, legMat);
+  legRMesh.position.y = -0.5;
+  legRGroup.add(legRMesh);
+  legRGroup.position.set(0.2, 1, 0);
+  playerCharacter.add(legRGroup);
 
   scene.add(playerCharacter);
   playerCharacter.visible = false; // Start in 1st person
@@ -168,16 +178,23 @@ function animate() {
 
   if (!canJump) {
     // Jumping: Raise arms
-    armLGroup.rotation.x = 2.5; 
-    armRGroup.rotation.x = 2.5;
+    armLGroup.rotation.x = Math.PI; 
+    armRGroup.rotation.x = Math.PI;
+    legLGroup.rotation.x = 0;
+    legRGroup.rotation.x = 0;
   } else if (isWalking) {
     // Walking: Swing arms back and forth
-    armLGroup.rotation.x = Math.sin(time * 10) * 0.8;
-    armRGroup.rotation.x = -Math.sin(time * 10) * 0.8;
+    const angle = Math.sin(time * 10) * 0.8;
+    armLGroup.rotation.x = angle;
+    armRGroup.rotation.x = -angle;
+    legLGroup.rotation.x = -angle;
+    legRGroup.rotation.x = angle;
   } else {
     // Idle: Reset arms
     armLGroup.rotation.x = 0;
     armRGroup.rotation.x = 0;
+    legLGroup.rotation.x = 0;
+    legRGroup.rotation.x = 0;
   }
 
   // Camera following logic

@@ -4,6 +4,7 @@ let moveForward = false, moveBackward = false, moveLeft = false, moveRight = fal
 let velocity = new THREE.Vector3();
 let direction = new THREE.Vector3();
 let zoomDist = 0; // 0 is First Person
+let isFrontView = false;
 
 window.init3D = function() {
   document.getElementById('three-overlay').style.display = 'flex';
@@ -31,6 +32,21 @@ window.init3D = function() {
   const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({color: 0xf5f5dc}));
   head.position.y = 2.25;
   playerCharacter.add(head);
+
+  // Eyes (Black)
+  const eyeGeo = new THREE.BoxGeometry(0.1, 0.1, 0.01);
+  const eyeMat = new THREE.MeshStandardMaterial({color: 0x000000});
+  const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+  eyeL.position.set(-0.12, 2.35, -0.251); // 0.001 offset prevents "Z-fighting"
+  playerCharacter.add(eyeL);
+  const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+  eyeR.position.set(0.12, 2.35, -0.251);
+  playerCharacter.add(eyeR);
+
+  // Smile :)
+  const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.04, 0.01), new THREE.MeshStandardMaterial({color: 0x000000}));
+  mouth.position.set(0, 2.12, -0.251); // Place flush on front of head
+  playerCharacter.add(mouth);
 
   // Arms (Beige)
   const armGeo = new THREE.BoxGeometry(0.35, 1, 0.35);
@@ -93,6 +109,7 @@ window.init3D = function() {
       case 'ArrowDown': case 'KeyS': moveBackward = true; break;
       case 'ArrowRight': case 'KeyD': moveRight = true; break;
       case 'Space': if (canJump) { velocity.y = 12; canJump = false; } break;
+      case 'KeyC': if (zoomDist < 0.5) zoomDist = 6; isFrontView = !isFrontView; break;
     }
   };
   const onKeyUp = (e) => {
@@ -108,6 +125,10 @@ window.init3D = function() {
   window.addEventListener('keyup', onKeyUp);
 
   onWheel = (e) => {
+    if (isFrontView) {
+      e.preventDefault();
+      return; // Zoom is locked in front view
+    }
     zoomDist = Math.max(0, Math.min(15, zoomDist + e.deltaY * 0.01));
     e.preventDefault();
   };
@@ -133,7 +154,7 @@ document.addEventListener('mousemove', (e) => {
   rotation.y -= e.movementX * 0.002;
   rotation.x -= e.movementY * 0.002;
   rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotation.x));
-  if (zoomDist < 0.5) camera.rotation.set(rotation.x, rotation.y, 0, 'YXZ');
+  if (zoomDist < 0.5 && !isFrontView) camera.rotation.set(rotation.x, rotation.y, 0, 'YXZ');
 });
 
 function animate() {
@@ -198,15 +219,16 @@ function animate() {
   }
 
   // Camera following logic
-  const isThirdPerson = zoomDist > 0.5;
+  const isThirdPerson = (zoomDist > 0.5) || isFrontView;
   playerCharacter.visible = isThirdPerson;
 
-  if (!isThirdPerson) {
+  if (!isThirdPerson && !isFrontView) {
     camera.position.copy(playerCharacter.position);
     camera.position.y += 2.2; // Head height
   } else {
-    // Dynamically calculate offset based on zoom distance
-    const relativeCameraOffset = new THREE.Vector3(0, 1 + zoomDist * 0.3, zoomDist);
+    // Dynamically calculate offset based on zoom distance and front/back mode
+    const zOffset = isFrontView ? -zoomDist : zoomDist;
+    const relativeCameraOffset = new THREE.Vector3(0, 1 + zoomDist * 0.3, zOffset);
     const cameraOffset = relativeCameraOffset.applyMatrix4(playerCharacter.matrixWorld);
     camera.position.x = cameraOffset.x;
     camera.position.y = cameraOffset.y;

@@ -184,8 +184,17 @@
   .messages-friend-item.active { background: var(--red-dim); }
   .messages-friend-avatar { font-size: 1.5rem; display: flex; align-items: center; justify-content: center; }
   .char-mugshot { width: 20px; height: 20px; background: #f5f5dc; border: 1px solid #dcdcaa; border-radius: 2px; display: inline-block; vertical-align: middle; margin-right: 5px; }
+  .char-mugshot { 
+    width: 20px; height: 20px; background: #f5f5dc; border: 1px solid #dcdcaa; border-radius: 2px; 
+    display: inline-block; vertical-align: middle; margin-right: 5px; position: relative; 
+  }
+  .char-mugshot::before { content:''; position:absolute; top:4px; left:3px; width:4px; height:4px; background:#000; box-shadow:10px 0 #000; }
+  .char-mugshot::after { content:''; position:absolute; bottom:4px; left:5px; width:10px; height:2px; background:#000; }
   .char-full { display: flex; flex-direction: column; align-items: center; padding: 20px; margin-top: 1rem; transform: scale(1.2); }
   .char-head-ui { width: 30px; height: 30px; background: #f5f5dc; border: 1px solid #dcdcaa; }
+  .char-head-ui { width: 30px; height: 30px; background: #f5f5dc; border: 1px solid #dcdcaa; position: relative; }
+  .char-head-ui::before { content:''; position:absolute; top:6px; left:5px; width:6px; height:6px; background:#000; box-shadow:14px 0 #000; }
+  .char-head-ui::after { content:''; position:absolute; bottom:6px; left:8px; width:14px; height:2px; background:#000; }
   .char-row { display: flex; }
   .char-arm-ui { width: 15px; height: 50px; background: #f5f5dc; border: 1px solid #dcdcaa; }
   .char-torso-ui { width: 40px; height: 50px; background: #ffffff; border: 1px solid #ccc; }
@@ -419,7 +428,7 @@
 <!-- 3D OVERLAY -->
 <div id="three-overlay">
   <div id="three-canvas-container"></div>
-  <div class="three-ui"></div>
+  <div class="three-ui">WASD to Walk · SPACE to Jump · SCROLL to Zoom · C for Front View</div>
   <button class="three-exit" onclick="window.stop3DTest()">Exit Test</button>
 </div>
 

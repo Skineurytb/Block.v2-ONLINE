@@ -1,10 +1,29 @@
 // ============ ADMIN 3D TEST ENGINE ============
-let scene, camera, renderer, clock, playerCharacter, armLGroup, armRGroup, legLGroup, legRGroup, onWheel;
+let scene, camera, renderer, clock, playerCharacter, headMesh, armLGroup, armRGroup, legLGroup, legRGroup, onWheel;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, canJump = false;
 let velocity = new THREE.Vector3();
 let direction = new THREE.Vector3();
 let zoomDist = 0; // 0 is First Person
 let isFrontView = false;
+
+function createPixelTexture(color, width, height, drawExtra) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, width, height);
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+      const r = Math.random();
+      if (r > 0.8) { ctx.fillStyle = 'rgba(0,0,0,0.05)'; ctx.fillRect(x, y, 1, 1); }
+      else if (r > 0.9) { ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(x, y, 1, 1); }
+    }
+  }
+  if (drawExtra) drawExtra(ctx);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.magFilter = texture.minFilter = THREE.NearestFilter;
+  return texture;
+}
 
 window.init3D = function() {
   document.getElementById('three-overlay').style.display = 'flex';
@@ -24,33 +43,36 @@ window.init3D = function() {
   playerCharacter = new THREE.Group();
   
   // Torso (White)
-  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1, 0.4), new THREE.MeshStandardMaterial({color: 0xffffff}));
+  const torsoTex = createPixelTexture('#ffffff', 8, 12);
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1, 0.4), new THREE.MeshStandardMaterial({map: torsoTex}));
   torso.position.y = 1.5;
   playerCharacter.add(torso);
 
   // Head (Beige)
-  const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({color: 0xf5f5dc}));
-  head.position.y = 2.25;
-  playerCharacter.add(head);
-
-  // Eyes (Black)
-  const eyeGeo = new THREE.BoxGeometry(0.1, 0.1, 0.01);
-  const eyeMat = new THREE.MeshStandardMaterial({color: 0x000000});
-  const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeL.position.set(-0.12, 2.35, -0.251); // 0.001 offset prevents "Z-fighting"
-  playerCharacter.add(eyeL);
-  const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeR.position.set(0.12, 2.35, -0.251);
-  playerCharacter.add(eyeR);
-
-  // Smile :)
-  const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.04, 0.01), new THREE.MeshStandardMaterial({color: 0x000000}));
-  mouth.position.set(0, 2.12, -0.251); // Place flush on front of head
-  playerCharacter.add(mouth);
+  const headTex = createPixelTexture('#f5f5dc', 8, 8);
+  const faceTex = createPixelTexture('#f5f5dc', 8, 8, (ctx) => {
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(1, 2, 2, 2); // Eye L
+    ctx.fillRect(5, 2, 2, 2); // Eye R
+    ctx.fillRect(2, 5, 4, 1); // Mouth
+    ctx.fillRect(2, 4, 1, 1); ctx.fillRect(5, 4, 1, 1);
+  });
+  const headMats = [
+    new THREE.MeshStandardMaterial({map: headTex}), // Right
+    new THREE.MeshStandardMaterial({map: headTex}), // Left
+    new THREE.MeshStandardMaterial({map: headTex}), // Top
+    new THREE.MeshStandardMaterial({map: headTex}), // Bottom
+    new THREE.MeshStandardMaterial({map: headTex}), // Back
+    new THREE.MeshStandardMaterial({map: faceTex}), // Front
+  ];
+  headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), headMats);
+  headMesh.position.y = 2.25;
+  playerCharacter.add(headMesh);
 
   // Arms (Beige)
+  const armTex = createPixelTexture('#f5f5dc', 4, 12);
   const armGeo = new THREE.BoxGeometry(0.35, 1, 0.35);
-  const armMat = new THREE.MeshStandardMaterial({color: 0xf5f5dc});
+  const armMat = new THREE.MeshStandardMaterial({map: armTex});
   
   armLGroup = new THREE.Group();
   const armLMesh = new THREE.Mesh(armGeo, armMat);
@@ -67,8 +89,9 @@ window.init3D = function() {
   playerCharacter.add(armRGroup);
 
   // Legs (Blue)
+  const legTex = createPixelTexture('#0000ff', 4, 12);
   const legGeo = new THREE.BoxGeometry(0.4, 1, 0.4);
-  const legMat = new THREE.MeshStandardMaterial({color: 0x0000ff});
+  const legMat = new THREE.MeshStandardMaterial({map: legTex});
 
   legLGroup = new THREE.Group();
   const legLMesh = new THREE.Mesh(legGeo, legMat);
@@ -109,7 +132,7 @@ window.init3D = function() {
       case 'ArrowDown': case 'KeyS': moveBackward = true; break;
       case 'ArrowRight': case 'KeyD': moveRight = true; break;
       case 'Space': if (canJump) { velocity.y = 12; canJump = false; } break;
-      case 'KeyC': if (zoomDist < 0.5) zoomDist = 6; isFrontView = !isFrontView; break;
+      case 'KeyC': if (zoomDist < 0.6) zoomDist = 6; isFrontView = !isFrontView; break;
     }
   };
   const onKeyUp = (e) => {
@@ -193,6 +216,9 @@ function animate() {
   playerCharacter.position.y += velocity.y * delta;
   playerCharacter.rotation.y = rotation.y;
 
+  // Character Head Rotation
+  if (headMesh) headMesh.rotation.x = rotation.x;
+
   // Character Animations
   const time = clock.elapsedTime;
   const isWalking = (moveForward || moveBackward || moveLeft || moveRight) && canJump;
@@ -222,18 +248,19 @@ function animate() {
   const isThirdPerson = (zoomDist > 0.5) || isFrontView;
   playerCharacter.visible = isThirdPerson;
 
+  const targetPos = playerCharacter.position.clone().add(new THREE.Vector3(0, 2.2, 0));
+
   if (!isThirdPerson && !isFrontView) {
     camera.position.copy(playerCharacter.position);
-    camera.position.y += 2.2; // Head height
+    camera.position.y += 2.2;
+    camera.rotation.set(rotation.x, rotation.y, 0, 'YXZ');
   } else {
-    // Dynamically calculate offset based on zoom distance and front/back mode
-    const zOffset = isFrontView ? -zoomDist : zoomDist;
-    const relativeCameraOffset = new THREE.Vector3(0, 1 + zoomDist * 0.3, zOffset);
-    const cameraOffset = relativeCameraOffset.applyMatrix4(playerCharacter.matrixWorld);
-    camera.position.x = cameraOffset.x;
-    camera.position.y = cameraOffset.y;
-    camera.position.z = cameraOffset.z;
-    camera.lookAt(playerCharacter.position.x, playerCharacter.position.y + 1.5, playerCharacter.position.z);
+    const dist = zoomDist || 6;
+    let offset = new THREE.Vector3(0, 0, isFrontView ? -dist : dist);
+    offset.applyAxisAngle(new THREE.Vector3(1, 0, 0), isFrontView ? rotation.x : -rotation.x);
+    offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotation.y);
+    camera.position.copy(targetPos).add(offset);
+    camera.lookAt(targetPos);
   }
 
   if (playerCharacter.position.y < 0) {

@@ -13,7 +13,7 @@
 
 <!-- Three.js for Admin 3D Test -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="c:\Users\User\Desktop\Skineur Secret Hub\docs\3d-test.js"></script>
+<script src="3d-test.js"></script>
 
 <script>
   const firebaseConfig = {
@@ -763,7 +763,7 @@ function enterHub() {
 
   const isAdmin = currentUsername && ADMINS.includes(currentUsername.toLowerCase());
   document.getElementById('admin-btn').style.display = 'none'; // Topbar dots removed per request
-  document.getElementById('admin-3d-btn').style.display = isAdmin ? 'block' : 'none';
+  if (document.getElementById('admin-3d-btn')) document.getElementById('admin-3d-btn').style.display = isAdmin ? 'block' : 'none';
   if (isAdmin) earnAward('ADMIN');
 }
 

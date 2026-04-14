@@ -62,6 +62,9 @@
   .topbar { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 720px; margin-bottom: 1rem; }
   .user-pill { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--muted); background: var(--tag); border: 1px solid var(--border); padding: 0.3rem 0.8rem; border-radius: 99px; display: flex; align-items: center; gap: 0.5rem; }
   .logout-btn { background: transparent; border: none; color: var(--muted); font-size: 0.78rem; cursor: pointer; font-family: 'DM Mono', monospace; transition: color 0.15s; }
+  .admin-dots { background: transparent; border: 1px solid var(--border); color: var(--muted); width: 24px; height: 24px; border-radius: 4px; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 1rem; margin-right: 8px; }
+  .admin-dots:hover { color: var(--red); border-color: var(--red); }
+  .top-actions { display: flex; align-items: center; }
   .logout-btn:hover { color: var(--red); }
 
   .box { width: 100%; max-width: 720px; background: var(--surface); border: 1px solid var(--red); border-radius: 16px; box-shadow: 0 0 18px var(--red-glow), 0 0 50px rgba(224,48,48,0.15), 0 0 100px rgba(224,48,48,0.07); padding: 1.8rem; }
@@ -126,6 +129,8 @@
   .profile-stat { background: var(--tag); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.2rem; display: flex; align-items: center; justify-content: space-between; }
   .profile-stat .label { font-family: 'DM Mono', monospace; font-size: 0.85rem; color: var(--muted); }
   .profile-stat .value { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: var(--text); font-weight: 500; }
+  .awards-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+  .award-tag { background: var(--red-dim); border: 1px solid var(--red); color: var(--red); font-family: 'DM Mono', monospace; font-size: 0.65rem; padding: 0.2rem 0.5rem; border-radius: 4px; text-transform: uppercase; font-weight: 600; }
   .search-row { display: flex; gap: 0.5rem; }
   .search-input { flex: 1; padding: 0.6rem 1rem; background: #0f0f0f; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.85rem; outline: none; transition: border-color 0.15s; }
   .search-input:focus { border-color: var(--red); box-shadow: 0 0 8px var(--red-glow); }
@@ -216,7 +221,10 @@
   <div class="hub-title">Block.v2 Online</div>
   <div class="topbar">
     <div class="user-pill">👤 <span id="display-username">—</span></div>
-    <button class="logout-btn" onclick="window.doLogout()">logout ↩</button>
+    <div class="top-actions">
+      <button class="admin-dots" id="admin-btn" onclick="window.showAdminInfo()">⋮</button>
+      <button class="logout-btn" onclick="window.doLogout()">logout ↩</button>
+    </div>
   </div>
   <div class="box">
     <div class="tabs">
@@ -283,7 +291,12 @@
           <div class="score-display" id="ttt-status">X's turn</div>
           <div id="ttt-board"></div>
           <div style="display:flex;gap:0.5rem;align-items:center;">
-            <button class="play-btn" onclick="window.resetTTT()">New Game</button>
+            <div style="display:flex; flex-direction:column; gap:0.4rem;">
+              <button class="play-btn" onclick="window.resetTTT()">New Game</button>
+              <select id="ttt-difficulty" class="field" style="padding:0.3rem; font-size:0.75rem; width:100px;">
+                <option value="easy">Easy</option><option value="medium">Medium</option><option value="impossible" selected>Impossible</option>
+              </select>
+            </div>
             <button class="game-btn" id="ai-toggle" onclick="window.toggleAI()" style="border-radius:99px;">🤖 AI: OFF</button>
           </div>
           <div class="game-info">X = You &nbsp;·&nbsp; O = AI (when on)</div>
@@ -306,6 +319,7 @@
         <div class="profile-stat"><span class="label">🐍 Snake Best</span><span class="value" id="profile-snake">0</span></div>
         <div class="profile-stat"><span class="label">🏆 Tetris Best</span><span class="value" id="profile-tetris">0</span></div>
         <div class="profile-stat"><span class="label">🏓 Breakout Best</span><span class="value" id="profile-breakout">0</span></div>
+        <div class="profile-stat" style="flex-direction:column; align-items:flex-start; gap:0.5rem;"><span class="label">🏅 Awards</span><div class="awards-grid" id="profile-awards"></div></div>
       </div>
     </div>
 
@@ -371,11 +385,22 @@
 </div>
 
 <script>
-// ============ DEFAULT AVATAR ============
+// ============ CONSTANTS ============
 const DEFAULT_AVATAR = 'avatar.png';
+const ADMINS = ['skineur', 'admin']; // Add names here
+const AWARD_MAP = {
+  'SNAKE_50': 'SNAKE!',
+  'SNAKE_FULL': 'LONG SNAKE',
+  'TTT_EASY': 'EZ X WIN',
+  'TTT_MEDIUM': 'GG!',
+  'TTT_IMPOSSIBLE': 'YOU BEAT THE TIC TAC TOE MASTER',
+  'ADMIN': 'Admin'
+};
+
+// ============ DEFAULT AVATAR ============
 
 // ============ STATE ============
-let currentUser = null, tetrisBest = 0, snakeBestDB = 0, avatar = DEFAULT_AVATAR, currentUsername = null;
+let currentUser = null, tetrisBest = 0, snakeBestDB = 0, avatar = DEFAULT_AVATAR, currentUsername = null, userAwards = [];
 let snakeColor = '#ffffff', snakeRainbow = false;
 let currentChatFriend = null, messagesUnsub = null;
 
@@ -441,6 +466,17 @@ function refreshFriendsUI() {
   if (panel && panel.classList.contains('active')) renderFriendsTab();
   const msgPanel = document.getElementById('tab-messages');
   if (msgPanel && msgPanel.classList.contains('active')) renderMessagesSidebar();
+}
+
+async function earnAward(id) {
+  if (!currentUsername || userAwards.includes(id)) return;
+  try {
+    await db.collection('users').doc(currentUsername.toLowerCase()).update({
+      awards: firebase.firestore.FieldValue.arrayUnion(id)
+    });
+    userAwards.push(id);
+    if (document.getElementById('tab-profile').classList.contains('active')) renderAwards();
+  } catch (e) { console.warn('earnAward error:', e); }
 }
 
 // ============ PROFILE CACHE ============
@@ -658,6 +694,18 @@ function setSnakeColor(color, btn) {
   if (currentUsername) db.collection('users').doc(currentUsername.toLowerCase()).set({ snakeColor }, { merge: true }).catch(() => {});
 }
 
+function renderAwards() {
+  const container = document.getElementById('profile-awards');
+  container.innerHTML = '';
+  if (userAwards.length === 0) { container.innerHTML = '<div style="font-size:0.75rem; color:var(--muted);">No awards yet.</div>'; return; }
+  userAwards.forEach(aid => {
+    const tag = document.createElement('div');
+    tag.className = 'award-tag';
+    tag.textContent = AWARD_MAP[aid] || aid;
+    container.appendChild(tag);
+  });
+}
+
 // ============ SCREENS ============
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
@@ -681,19 +729,28 @@ function enterHub() {
   document.getElementById('tetris-best-display').textContent = tetrisBest;
   document.getElementById('snake-best-display').textContent = snakeBestDB;
   buildColorPresets();
+  renderAwards();
   subscribeFriendData();
+
+  const isAdmin = ADMINS.includes(name.toLowerCase());
+  document.getElementById('admin-btn').style.display = isAdmin ? 'flex' : 'none';
+  if (isAdmin) earnAward('ADMIN');
 }
 
 function doLogout() {
   if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
   unsubscribeFriendData();
-  currentUser = null; tetrisBest = 0; snakeBestDB = 0; avatar = DEFAULT_AVATAR; currentUsername = null; currentChatFriend = null;
+  currentUser = null; tetrisBest = 0; snakeBestDB = 0; avatar = DEFAULT_AVATAR; currentUsername = null; currentChatFriend = null; userAwards = [];
   document.getElementById('main').style.display = 'none';
   document.getElementById('login-user').value = '';
   document.getElementById('login-pass').value = '';
   const login = document.getElementById('screen-login');
   login.classList.remove('hidden'); login.style.display = '';
   auth.signOut().catch(() => {});
+}
+
+function showAdminInfo() {
+  alert(`ADMIN INFO\nEmail: ${currentUser}\nStatus: Verified Operator`);
 }
 
 // ============ AUTH ============
@@ -709,6 +766,7 @@ async function loadUserData() {
       snakeRainbow = snakeColor === 'rainbow';
       avatar = d.avatar || DEFAULT_AVATAR;
       currentUsername = d.username || currentUsername;
+      userAwards = d.awards || [];
       document.getElementById('profile-breakout').textContent = d.breakout_best || 0;
     }
   } catch (e) { console.warn('loadUserData error:', e); }
@@ -756,7 +814,8 @@ async function doRegister() {
       tetris_best: 0,
       breakout_best: 0,
       avatar: '👤',
-      snakeColor: '#ffffff'
+      snakeColor: '#ffffff',
+      awards: []
     });
 
     regOk.textContent = 'Account created! Welcome 🎉';
@@ -805,6 +864,13 @@ function switchTab(tabName, btn) {
   btn.classList.add('active');
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-' + tabName)?.classList.add('active');
+  
+  // Cleanup messaging listener if moving away from messages tab
+  if (tabName !== 'messages' && messagesUnsub) {
+    messagesUnsub();
+    messagesUnsub = null;
+  }
+
   if (tabName === 'friends') renderFriendsTab();
   if (tabName === 'messages') loadMessagesTab();
 }
@@ -987,6 +1053,8 @@ function startSnake() {
       return;
     }
     snake.unshift(head);
+    if (score >= 50) earnAward('SNAKE_50');
+    if (snake.length === cols * rows) earnAward('SNAKE_FULL');
     if (head.x===food.x && head.y===food.y) { score++; document.getElementById('snake-score').textContent = score; food = rndFood(); }
     else snake.pop();
     ctx.fillStyle = '#080808'; ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -1069,12 +1137,13 @@ function toggleAI() {
   const btn = document.getElementById('ai-toggle');
   btn.textContent = tttAI ? '🤖 AI: ON' : '🤖 AI: OFF';
   btn.style.background   = tttAI ? 'var(--red)' : '';
-  btn.style.color        = tttAI ? 'white' : '';
+  btn.style.color = tttAI ? 'white' : '';
   btn.style.borderColor  = tttAI ? 'var(--red)' : '';
   resetTTT();
 }
 function resetTTT() {
   tttBoard = Array(9).fill(''); tttTurn = 'X'; tttOver = false;
+  const diff = document.getElementById('ttt-difficulty').value;
   document.getElementById('ttt-status').textContent = tttAI ? 'Your turn (X)' : "X's turn";
   const b = document.getElementById('ttt-board'); b.innerHTML = '';
   for (let i=0; i<9; i++) { const c=document.createElement('div'); c.className='ttt-cell'; c.dataset.i=i; c.onclick=()=>tttMove(i); b.appendChild(c); }
@@ -1083,6 +1152,12 @@ const WIN_LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,
 function checkWinner(b) { for(const[a,x,c]of WIN_LINES){if(b[a]&&b[a]===b[x]&&b[a]===b[c])return b[a];}if(b.every(c=>c))return'draw';return null; }
 function minimax(b,isMax) { const w=checkWinner(b);if(w==='O')return 10;if(w==='X')return -10;if(w==='draw')return 0;let best=isMax?-Infinity:Infinity;for(let i=0;i<9;i++){if(!b[i]){b[i]=isMax?'O':'X';const s=minimax(b,!isMax);b[i]='';best=isMax?Math.max(best,s):Math.min(best,s);}}return best; }
 function bestMove(b) { let best=-Infinity,move=-1;for(let i=0;i<9;i++){if(!b[i]){b[i]='O';const s=minimax(b,false);b[i]='';if(s>best){best=s;move=i;}}}return move; }
+function getAIMove(b, difficulty) {
+  const empty = b.map((v, i) => v === '' ? i : null).filter(v => v !== null);
+  if (difficulty === 'easy' && Math.random() < 0.8) return empty[Math.floor(Math.random() * empty.length)];
+  if (difficulty === 'medium' && Math.random() < 0.4) return empty[Math.floor(Math.random() * empty.length)];
+  return bestMove(b);
+}
 function renderCell(i) { document.querySelector(`[data-i="${i}"]`).textContent = tttBoard[i]==='X'?'✕':'○'; }
 function tttMove(i) {
   if (tttOver||tttBoard[i]) return;
@@ -1092,14 +1167,22 @@ function tttMove(i) {
   tttTurn=tttTurn==='X'?'O':'X';
   if (tttAI&&tttTurn==='O') {
     document.getElementById('ttt-status').textContent='🤖 AI is thinking...';
-    setTimeout(() => { const m=bestMove(tttBoard);tttBoard[m]='O';renderCell(m);const w2=checkWinner(tttBoard);if(w2){endGame(w2);return;}tttTurn='X';document.getElementById('ttt-status').textContent='Your turn (X)'; }, 300);
+    const diff = document.getElementById('ttt-difficulty').value;
+    setTimeout(() => { const m=getAIMove(tttBoard, diff);tttBoard[m]='O';renderCell(m);const w2=checkWinner(tttBoard);if(w2){endGame(w2);return;}tttTurn='X';document.getElementById('ttt-status').textContent='Your turn (X)'; }, 300);
   } else { document.getElementById('ttt-status').textContent = tttAI?'Your turn (X)':tttTurn+"'s turn"; }
 }
 function endGame(w) {
   tttOver=true;
   if(w==='draw') document.getElementById('ttt-status').textContent="It's a draw!";
-  else if(tttAI) document.getElementById('ttt-status').textContent=w==='X'?'You win! 🎉':'🤖 AI wins!';
-  else document.getElementById('ttt-status').textContent=w+' wins! 🎉';
+  else if(tttAI) {
+    if (w === 'X') {
+      const diff = document.getElementById('ttt-difficulty').value;
+      if (diff === 'easy') earnAward('TTT_EASY');
+      else if (diff === 'medium') earnAward('TTT_MEDIUM');
+      else if (diff === 'impossible') earnAward('TTT_IMPOSSIBLE');
+      document.getElementById('ttt-status').textContent='You win! 🎉';
+    } else document.getElementById('ttt-status').textContent='🤖 AI wins!';
+  } else document.getElementById('ttt-status').textContent=w+' wins! 🎉';
 }
 resetTTT();
 
@@ -1135,7 +1218,7 @@ function startBreakout() {
 }
 
 // ============ EXPOSE ============
-window.showScreen=showScreen; window.doLogin=doLogin; window.doRegister=doRegister; window.doLogout=doLogout;
+window.showScreen=showScreen; window.doLogin=doLogin; window.doRegister=doRegister; window.doLogout=doLogout; window.showAdminInfo=showAdminInfo;
 window.switchTab=switchTab; window.showGame=showGame;
 window.startSnake=startSnake; window.startTetris=startTetris; window.resetTTT=resetTTT; window.toggleAI=toggleAI; window.startBreakout=startBreakout;
 window.setSnakeColor=setSnakeColor; window.loadFriendsTab=loadFriendsTab;

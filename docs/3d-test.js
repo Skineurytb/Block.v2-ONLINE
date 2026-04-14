@@ -1,5 +1,5 @@
 // ============ ADMIN 3D TEST ENGINE ============
-let scene, camera, renderer, clock, playerCharacter;
+let scene, camera, renderer, clock, playerCharacter, armLGroup, armRGroup;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, canJump = false;
 let velocity = new THREE.Vector3();
 let direction = new THREE.Vector3();
@@ -33,18 +33,28 @@ window.init3D = function() {
   playerCharacter.add(head);
 
   // Arms (Beige)
-  const armL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1, 0.3), new THREE.MeshStandardMaterial({color: 0xf5f5dc}));
-  armL.position.set(-0.55, 1.5, 0);
-  playerCharacter.add(armL);
-  const armR = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1, 0.3), new THREE.MeshStandardMaterial({color: 0xf5f5dc}));
-  armR.position.set(0.55, 1.5, 0);
-  playerCharacter.add(armR);
+  const armGeo = new THREE.BoxGeometry(0.35, 1, 0.35);
+  const armMat = new THREE.MeshStandardMaterial({color: 0xf5f5dc});
+  
+  armLGroup = new THREE.Group();
+  const armLMesh = new THREE.Mesh(armGeo, armMat);
+  armLMesh.position.y = -0.5; // Offset so pivot is at top of arm
+  armLGroup.add(armLMesh);
+  armLGroup.position.set(-0.6, 2, 0); // Position at shoulder
+  playerCharacter.add(armLGroup);
+
+  armRGroup = new THREE.Group();
+  const armRMesh = new THREE.Mesh(armGeo, armMat);
+  armRMesh.position.y = -0.5;
+  armRGroup.add(armRMesh);
+  armRGroup.position.set(0.6, 2, 0);
+  playerCharacter.add(armRGroup);
 
   // Legs (Blue)
-  const legL = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1, 0.35), new THREE.MeshStandardMaterial({color: 0x0000ff}));
+  const legL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1, 0.4), new THREE.MeshStandardMaterial({color: 0x0000ff}));
   legL.position.set(-0.2, 0.5, 0);
   playerCharacter.add(legL);
-  const legR = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1, 0.35), new THREE.MeshStandardMaterial({color: 0x0000ff}));
+  const legR = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1, 0.4), new THREE.MeshStandardMaterial({color: 0x0000ff}));
   legR.position.set(0.2, 0.5, 0);
   playerCharacter.add(legR);
 
@@ -146,6 +156,24 @@ function animate() {
   playerCharacter.position.z += velocity.z * delta;
   playerCharacter.position.y += velocity.y * delta;
   playerCharacter.rotation.y = rotation.y;
+
+  // Character Animations
+  const time = clock.elapsedTime;
+  const isWalking = (moveForward || moveBackward || moveLeft || moveRight) && canJump;
+
+  if (!canJump) {
+    // Jumping: Raise arms
+    armLGroup.rotation.x = -2.5; 
+    armRGroup.rotation.x = -2.5;
+  } else if (isWalking) {
+    // Walking: Swing arms back and forth
+    armLGroup.rotation.x = Math.sin(time * 10) * 0.8;
+    armRGroup.rotation.x = -Math.sin(time * 10) * 0.8;
+  } else {
+    // Idle: Reset arms
+    armLGroup.rotation.x = 0;
+    armRGroup.rotation.x = 0;
+  }
 
   // Camera following logic
   if (!isThirdPerson) {

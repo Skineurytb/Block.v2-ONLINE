@@ -43,26 +43,21 @@ window.init3D = function() {
   playerCharacter = new THREE.Group();
   
   // Torso (White)
-  const torsoTex = createPixelTexture('#f5f5dc', 8, 12, (ctx) => {
-    ctx.fillStyle = '#808080'; // Gray underwear
-    ctx.fillRect(0, 8, 8, 3);
-    ctx.fillStyle = '#ff0000'; // Red line at the bottom
-    ctx.fillRect(0, 11, 8, 1);
-  });
+  const torsoTex = createPixelTexture('#f5f5dc', 8, 12);
   const torso = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1, 0.4), new THREE.MeshStandardMaterial({map: torsoTex}));
   torso.position.y = 1.5;
   playerCharacter.add(torso);
 
   // Head (Beige)
-  const headTex = createPixelTexture('#f5f5dc', 16, 16);
-  const faceTex = createPixelTexture('#f5f5dc', 16, 16, (ctx) => {
+  const headTex = createPixelTexture('#f5f5dc', 8, 8);
+  const faceTex = createPixelTexture('#f5f5dc', 8, 8, (ctx) => {
     // Eyes: 2px horizontal (White pixel + Black pupil)
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(4, 5, 1, 1); 
-    ctx.fillStyle = '#000000'; ctx.fillRect(5, 5, 1, 1);
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(10, 5, 1, 1);
-    ctx.fillStyle = '#000000'; ctx.fillRect(11, 5, 1, 1);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(1, 2, 1, 1); 
+    ctx.fillStyle = '#000000'; ctx.fillRect(2, 2, 1, 1);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(5, 2, 1, 1);
+    ctx.fillStyle = '#000000'; ctx.fillRect(6, 2, 1, 1);
     // Mouth: Neutral :| line
-    ctx.fillStyle = '#000000'; ctx.fillRect(6, 11, 4, 1);
+    ctx.fillStyle = '#000000'; ctx.fillRect(2, 5, 4, 1);
   });
   const headMats = [
     new THREE.MeshStandardMaterial({map: headTex}), // Right
@@ -95,8 +90,13 @@ window.init3D = function() {
   armRGroup.position.set(0.575, 2, 0);
   playerCharacter.add(armRGroup);
 
-  // Legs (Blue)
-  const legTex = createPixelTexture('#f5f5dc', 4, 12);
+  // Legs (Beige)
+  const legTex = createPixelTexture('#f5f5dc', 4, 12, (ctx) => {
+    ctx.fillStyle = '#808080'; // Gray underwear
+    ctx.fillRect(0, 0, 4, 2);
+    ctx.fillStyle = '#ff0000'; // Red line
+    ctx.fillRect(0, 2, 4, 1);
+  });
   const legGeo = new THREE.BoxGeometry(0.4, 1, 0.4);
   const legMat = new THREE.MeshStandardMaterial({map: legTex});
 
@@ -182,7 +182,7 @@ let rotation = { x: 0, y: 0 };
 document.addEventListener('mousemove', (e) => {
   if (!controlsEnabled) return;
   rotation.y -= e.movementX * 0.002;
-  rotation.x += e.movementY * 0.002; // Fixed inverted pitch
+  rotation.x -= e.movementY * 0.002; 
   rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotation.x));
   if (zoomDist < 0.5 && !isFrontView) camera.rotation.set(rotation.x, rotation.y, 0, 'YXZ');
 });
@@ -264,7 +264,7 @@ function animate() {
   } else {
     const dist = zoomDist || 6;
     let offset = new THREE.Vector3(0, 0, isFrontView ? -dist : dist);
-    offset.applyAxisAngle(new THREE.Vector3(1, 0, 0), isFrontView ? -rotation.x : rotation.x); // Fixed reversed 3rd person orbit
+    offset.applyAxisAngle(new THREE.Vector3(1, 0, 0), isFrontView ? rotation.x : -rotation.x); 
     offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotation.y);
     camera.position.copy(targetPos).add(offset);
     camera.lookAt(targetPos);

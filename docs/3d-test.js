@@ -49,13 +49,13 @@ window.init3D = function() {
   playerCharacter.add(torso);
 
   // Head (Beige)
-  const headTex = createPixelTexture('#f5f5dc', 32, 32);
-  const faceTex = createPixelTexture('#f5f5dc', 32, 32, (ctx) => {
+  const headTex = createPixelTexture('#f5f5dc', 16, 16);
+  const faceTex = createPixelTexture('#f5f5dc', 16, 16, (ctx) => {
     ctx.fillStyle = '#000000';
-    ctx.fillRect(4, 8, 8, 8); // Eye L
-    ctx.fillRect(20, 8, 8, 8); // Eye R
-    ctx.fillRect(8, 20, 16, 4); // Mouth
-    ctx.fillRect(8, 16, 4, 4); ctx.fillRect(20, 16, 4, 4);
+    ctx.fillRect(2, 4, 4, 4); // Eye L
+    ctx.fillRect(10, 4, 4, 4); // Eye R
+    ctx.fillRect(4, 10, 8, 2); // Mouth
+    ctx.fillRect(4, 8, 2, 2); ctx.fillRect(10, 8, 2, 2); // Cheeks
   });
   const headMats = [
     new THREE.MeshStandardMaterial({map: headTex}), // Right
@@ -66,7 +66,7 @@ window.init3D = function() {
     new THREE.MeshStandardMaterial({map: faceTex}), // Front
   ];
   headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.75, 0.75), headMats);
-  headMesh.position.y = 2.375;
+  headMesh.position.y = 2.35; // Lowered slightly to prevent a "detached" look
   playerCharacter.add(headMesh);
 
   // Arms (Beige)
@@ -217,7 +217,7 @@ function animate() {
   playerCharacter.rotation.y = rotation.y;
 
   // Character Head Rotation
-  if (headMesh) headMesh.rotation.x = rotation.x;
+  if (headMesh) headMesh.rotation.x = -rotation.x; // Corrected inverted head pitch
 
   // Character Animations
   const time = clock.elapsedTime;
@@ -257,7 +257,7 @@ function animate() {
   } else {
     const dist = zoomDist || 6;
     let offset = new THREE.Vector3(0, 0, isFrontView ? -dist : dist);
-    offset.applyAxisAngle(new THREE.Vector3(1, 0, 0), isFrontView ? rotation.x : -rotation.x);
+    offset.applyAxisAngle(new THREE.Vector3(1, 0, 0), isFrontView ? -rotation.x : rotation.x); // Fixed reversed 3rd person orbit
     offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotation.y);
     camera.position.copy(targetPos).add(offset);
     camera.lookAt(targetPos);

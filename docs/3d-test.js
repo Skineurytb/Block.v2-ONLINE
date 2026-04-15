@@ -225,7 +225,7 @@ function animate() {
   playerCharacter.rotation.y = rotation.y;
 
   // Character Head Rotation
-  if (headMesh) headMesh.rotation.x = rotation.x; // Corrected head to follow camera
+  if (headMesh) headMesh.rotation.x = -rotation.x; 
 
   // Character Animations
   const time = clock.elapsedTime;
@@ -265,7 +265,7 @@ function animate() {
   } else {
     const dist = zoomDist || 6;
     let offset = new THREE.Vector3(0, 0, isFrontView ? -dist : dist);
-    offset.applyAxisAngle(new THREE.Vector3(1, 0, 0), isFrontView ? rotation.x : -rotation.x); 
+    offset.applyAxisAngle(new THREE.Vector3(1, 0, 0), isFrontView ? -rotation.x : rotation.x); 
     offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotation.y);
     camera.position.copy(targetPos).add(offset);
     camera.lookAt(targetPos);

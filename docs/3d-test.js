@@ -43,7 +43,12 @@ window.init3D = function() {
   playerCharacter = new THREE.Group();
   
   // Torso (White)
-  const torsoTex = createPixelTexture('#ffffff', 8, 12);
+  const torsoTex = createPixelTexture('#f5f5dc', 8, 12, (ctx) => {
+    ctx.fillStyle = '#808080'; // Gray underwear
+    ctx.fillRect(0, 8, 8, 3);
+    ctx.fillStyle = '#ff0000'; // Red line at the bottom
+    ctx.fillRect(0, 11, 8, 1);
+  });
   const torso = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1, 0.4), new THREE.MeshStandardMaterial({map: torsoTex}));
   torso.position.y = 1.5;
   playerCharacter.add(torso);
@@ -51,11 +56,13 @@ window.init3D = function() {
   // Head (Beige)
   const headTex = createPixelTexture('#f5f5dc', 16, 16);
   const faceTex = createPixelTexture('#f5f5dc', 16, 16, (ctx) => {
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(2, 4, 4, 4); // Eye L
-    ctx.fillRect(10, 4, 4, 4); // Eye R
-    ctx.fillRect(4, 10, 8, 2); // Mouth
-    ctx.fillRect(4, 8, 2, 2); ctx.fillRect(10, 8, 2, 2); // Cheeks
+    // Eyes: 2px horizontal (White pixel + Black pupil)
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(4, 5, 1, 1); 
+    ctx.fillStyle = '#000000'; ctx.fillRect(5, 5, 1, 1);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(10, 5, 1, 1);
+    ctx.fillStyle = '#000000'; ctx.fillRect(11, 5, 1, 1);
+    // Mouth: Neutral :| line
+    ctx.fillStyle = '#000000'; ctx.fillRect(6, 11, 4, 1);
   });
   const headMats = [
     new THREE.MeshStandardMaterial({map: headTex}), // Right
@@ -89,7 +96,7 @@ window.init3D = function() {
   playerCharacter.add(armRGroup);
 
   // Legs (Blue)
-  const legTex = createPixelTexture('#0000ff', 4, 12);
+  const legTex = createPixelTexture('#f5f5dc', 4, 12);
   const legGeo = new THREE.BoxGeometry(0.4, 1, 0.4);
   const legMat = new THREE.MeshStandardMaterial({map: legTex});
 
@@ -175,7 +182,7 @@ let rotation = { x: 0, y: 0 };
 document.addEventListener('mousemove', (e) => {
   if (!controlsEnabled) return;
   rotation.y -= e.movementX * 0.002;
-  rotation.x -= e.movementY * 0.002;
+  rotation.x += e.movementY * 0.002; // Fixed inverted pitch
   rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotation.x));
   if (zoomDist < 0.5 && !isFrontView) camera.rotation.set(rotation.x, rotation.y, 0, 'YXZ');
 });
@@ -217,7 +224,7 @@ function animate() {
   playerCharacter.rotation.y = rotation.y;
 
   // Character Head Rotation
-  if (headMesh) headMesh.rotation.x = -rotation.x; // Corrected inverted head pitch
+  if (headMesh) headMesh.rotation.x = rotation.x; // Corrected head to follow camera
 
   // Character Animations
   const time = clock.elapsedTime;

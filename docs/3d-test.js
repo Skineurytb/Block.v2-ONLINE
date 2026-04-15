@@ -43,19 +43,20 @@ window.init3D = function() {
   playerCharacter = new THREE.Group();
   
   // Torso (White)
-  const torsoTex = createPixelTexture('#f5f5dc', 8, 12);
+  const torsoTex = createPixelTexture('#ee9b55', 8, 12);
   const torso = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1, 0.4), new THREE.MeshStandardMaterial({map: torsoTex}));
   torso.position.y = 1.5;
   playerCharacter.add(torso);
 
   // Head (Beige)
-  const headTex = createPixelTexture('#f5f5dc', 8, 8);
-  const faceTex = createPixelTexture('#f5f5dc', 8, 8, (ctx) => {
-    // Eyes: 2px horizontal (White pixel + Black pupil)
+  const headTex = createPixelTexture('#ee9b55', 8, 8);
+  const faceTex = createPixelTexture('#ee9b55', 8, 8, (ctx) => {
+    // Eyes: 2px horizontal
     ctx.fillStyle = '#ffffff'; ctx.fillRect(1, 2, 1, 1); 
     ctx.fillStyle = '#000000'; ctx.fillRect(2, 2, 1, 1);
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(5, 2, 1, 1);
-    ctx.fillStyle = '#000000'; ctx.fillRect(6, 2, 1, 1);
+    // Right Eye Inversed (Black sclera + White pupil)
+    ctx.fillStyle = '#000000'; ctx.fillRect(5, 2, 1, 1);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(6, 2, 1, 1);
     // Mouth: Neutral :| line
     ctx.fillStyle = '#000000'; ctx.fillRect(2, 5, 4, 1);
   });
@@ -72,7 +73,7 @@ window.init3D = function() {
   playerCharacter.add(headMesh);
 
   // Arms (Beige)
-  const armTex = createPixelTexture('#f5f5dc', 4, 12);
+  const armTex = createPixelTexture('#ee9b55', 4, 12);
   const armGeo = new THREE.BoxGeometry(0.35, 1, 0.35);
   const armMat = new THREE.MeshStandardMaterial({map: armTex});
   
@@ -91,7 +92,7 @@ window.init3D = function() {
   playerCharacter.add(armRGroup);
 
   // Legs (Beige)
-  const legTex = createPixelTexture('#f5f5dc', 4, 12, (ctx) => {
+  const legTex = createPixelTexture('#ee9b55', 4, 12, (ctx) => {
     ctx.fillStyle = '#808080'; // Gray underwear
     ctx.fillRect(0, 0, 4, 2);
     ctx.fillStyle = '#ff0000'; // Red line

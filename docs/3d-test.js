@@ -49,13 +49,13 @@ window.init3D = function() {
   playerCharacter.add(torso);
 
   // Head (Beige)
-  const headTex = createPixelTexture('#f5f5dc', 8, 8);
-  const faceTex = createPixelTexture('#f5f5dc', 8, 8, (ctx) => {
+  const headTex = createPixelTexture('#f5f5dc', 32, 32);
+  const faceTex = createPixelTexture('#f5f5dc', 32, 32, (ctx) => {
     ctx.fillStyle = '#000000';
-    ctx.fillRect(1, 2, 2, 2); // Eye L
-    ctx.fillRect(5, 2, 2, 2); // Eye R
-    ctx.fillRect(2, 5, 4, 1); // Mouth
-    ctx.fillRect(2, 4, 1, 1); ctx.fillRect(5, 4, 1, 1);
+    ctx.fillRect(4, 8, 8, 8); // Eye L
+    ctx.fillRect(20, 8, 8, 8); // Eye R
+    ctx.fillRect(8, 20, 16, 4); // Mouth
+    ctx.fillRect(8, 16, 4, 4); ctx.fillRect(20, 16, 4, 4);
   });
   const headMats = [
     new THREE.MeshStandardMaterial({map: headTex}), // Right
@@ -65,8 +65,8 @@ window.init3D = function() {
     new THREE.MeshStandardMaterial({map: headTex}), // Back
     new THREE.MeshStandardMaterial({map: faceTex}), // Front
   ];
-  headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.7), headMats);
-  headMesh.position.y = 2.5;
+  headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.75, 0.75), headMats);
+  headMesh.position.y = 2.375;
   playerCharacter.add(headMesh);
 
   // Arms (Beige)

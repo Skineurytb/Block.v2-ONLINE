@@ -830,14 +830,14 @@ async function doRegister() {
   const regErr = document.getElementById('reg-err'), regOk = document.getElementById('reg-ok');
   regErr.textContent = ''; regOk.textContent = '';
 
-  const email    = document.getElementById('reg-user').value.trim();
+  const emailInput = document.getElementById('reg-user').value.trim();
   const origUsername = document.getElementById('reg-username').value.trim();
   const username = origUsername.toLowerCase();
   const pass     = document.getElementById('reg-pass').value;
   const pass2    = document.getElementById('reg-pass2').value;
 
-  // Validate email
-  if (!email || !email.includes('@')) { regErr.textContent = 'Please enter a valid email.'; return; }
+  // If email is empty, generate an internal dummy email for Firebase Auth
+  const email = emailInput || `${username}@blockv2.internal`;
 
   // Validate username (3-20 chars, alphanumeric + underscore)
   if (!origUsername || origUsername.length < 3 || origUsername.length > 20 || !/^[a-zA-Z0-9_]+$/.test(origUsername)) {
@@ -862,7 +862,8 @@ async function doRegister() {
 
     // Write the user doc — now rules will allow it since token is fresh
     await db.collection('users').doc(username).set({
-      email,
+      uid: cred.user.uid,
+      email: emailInput || null, // Store null if they didn't provide one
       username: origUsername,
       snake_best: 0,
       tetris_best: 0,

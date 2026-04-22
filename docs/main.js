@@ -423,6 +423,22 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+// ============ AUTH OBSERVER ============
+
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    // If we have a username stored (e.g. from login), ensure the doc has a UID
+    const uname = window.currentUsername || (user.email ? user.email.split('@')[0] : null);
+    if (uname) {
+      const userDoc = await db.collection('users').doc(uname.toLowerCase()).get();
+      if (userDoc.exists && !userDoc.data().uid) {
+        await userDoc.ref.update({ uid: user.uid });
+        console.log("Legacy account patched with UID.");
+      }
+    }
+  }
+});
+
 // ============ EXPOSE FUNCTIONS TO WINDOW ============
 
 window.handleAccept = handleAccept;

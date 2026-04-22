@@ -180,7 +180,7 @@ function renderMessages(messages) {
   
   messages.forEach(msg => {
     const item = document.createElement('div');
-    item.className = `message-item ${msg.from === currentUser ? 'sent' : 'received'}`;
+    item.className = `message-item ${msg.fromId === auth.currentUser.uid ? 'sent' : 'received'}`;
     item.innerHTML = `<div class="message-bubble">${escapeHtml(msg.text)}</div>`;
     messagesDiv.appendChild(item);
   });
@@ -332,9 +332,10 @@ async function searchFriend() {
     }
     
     const userData = doc.data();
-    const email = userData.email;
+    // Fallback to email for legacy support if UID isn't in the doc yet
+    const userUid = userData.uid || userData.email;
     
-    if (email === currentUser) {
+    if (userUid === auth.currentUser.uid || (userData.email && userData.email === auth.currentUser.email)) {
       result.innerHTML = '<div class="search-err">That\'s you!</div>';
       return;
     }
@@ -347,12 +348,12 @@ async function searchFriend() {
     const snakeBest = userData.snake_best || 0;
     const tetrisBest = userData.tetris_best || 0;
 
-    const status = await getFriendshipStatus(email);
+    const status = await getFriendshipStatus(userUid);
 
     let buttonText = 'Add Friend';
     let buttonClass = 'btn-sm';
     let buttonDisabled = false;
-    let clickHandler = () => handleAddFriend(email);
+    let clickHandler = () => handleAddFriend(userUid);
 
     if (status === 'accepted') {
       buttonText = '✓ Friends';
@@ -365,7 +366,7 @@ async function searchFriend() {
     } else if (status === 'received') {
       buttonText = '✓ Accept';
       buttonClass = 'btn-sm btn-sm-green';
-      clickHandler = () => handleAccept(email);
+      clickHandler = () => handleAccept(userUid);
     }
 
     result.innerHTML = '';

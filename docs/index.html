@@ -863,7 +863,7 @@ async function doRegister() {
     // Write the user doc — now rules will allow it since token is fresh
     await db.collection('users').doc(username).set({
       uid: cred.user.uid,
-      email: emailInput || null, // Store null if they didn't provide one
+      email: email, // Store the actual email used for Auth (real or internal)
       username: origUsername,
       snake_best: 0,
       tetris_best: 0,
@@ -1018,8 +1018,7 @@ async function searchFriend() {
     if (!snap.exists) { result.innerHTML = '<div class="search-err">User not found.</div>'; return; }
     const data = snap.data();
     const email = data.email;
-    if (!email) { result.innerHTML = '<div class="search-err">User not found.</div>'; return; }
-    if (email === currentUser) { result.innerHTML = '<div class="search-err">That\'s you!</div>'; return; }
+    if (email === currentUser || data.uid === auth.currentUser.uid) { result.innerHTML = '<div class="search-err">That\'s you!</div>'; return; }
 
     const f = cachedFriends !== null ? cachedFriends : await getFriendships();
     const r = cachedRequests !== null ? cachedRequests : await getFriendRequests();

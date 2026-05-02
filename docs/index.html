@@ -704,14 +704,37 @@ async function openChat(event, friendEmail) {
   subscribeMessages(friendEmail);
 }
 
+function showNotification(title, body) {
+  if (Notification.permission === "granted" && document.visibilityState !== "visible") {
+    new Notification(title, {
+      body: body,
+      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🎮</text></svg>'
+    });
+  }
+}
+
 function subscribeMessages(friendEmail) {
   const div = document.getElementById('messages-chat-messages');
   div.innerHTML = '<div style="text-align:center;color:var(--muted);">Loading...</div>';
   if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
   const convId = [currentUser, friendEmail].sort().join('_');
+  let isInitialLoad = true;
+
   messagesUnsub = db.collection('conversations').doc(convId).collection('messages')
     .orderBy('timestamp', 'asc').limit(50)
     .onSnapshot(snap => {
+      if (!isInitialLoad) {
+        snap.docChanges().forEach(change => {
+          if (change.type === 'added') {
+            const msg = change.doc.data();
+            if (msg.from !== currentUser) {
+              showNotification(`New message from ${friendEmail.split('@')[0]}`, msg.text);
+            }
+          }
+        });
+      }
+      isInitialLoad = false;
+
       div.innerHTML = '';
       if (snap.empty) { div.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:0.85rem;">No messages yet. Say hi! 👋</div>'; return; }
       snap.docs.forEach(doc => {
@@ -806,6 +829,12 @@ function enterHub() {
   buildColorPresets();
   renderAwards();
   subscribeFriendData();
+
+  // Request notification permission
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+
   if (currentUsername) db.collection('users').doc(currentUsername.toLowerCase()).update({ status: 'online' }).catch(() => {});
 
   const isAdmin = currentUsername && ADMINS.includes(currentUsername.toLowerCase());

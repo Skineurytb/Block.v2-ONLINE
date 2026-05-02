@@ -58,6 +58,9 @@
   .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); width: 100%; padding: 0.55rem; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
   .btn-ghost:hover { border-color: var(--red); color: var(--text); }
 
+  .close-btn { position: absolute; top: 12px; right: 12px; background: transparent; border: none; color: var(--muted); font-size: 1.5rem; cursor: pointer; line-height: 1; transition: color 0.15s; }
+  .close-btn:hover { color: var(--red); }
+
   .card-err { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--red); min-height: 1rem; text-align: center; }
   .card-ok  { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: #22c55e; min-height: 1rem; text-align: center; }
 
@@ -243,6 +246,20 @@
     <button class="btn-ghost" onclick="window.showScreen('screen-login')">Already have an account?</button>
     <div class="card-err" id="reg-err"></div>
     <div class="card-ok" id="reg-ok"></div>
+  </div>
+</div>
+
+<!-- VERIFY POPUP -->
+<div class="screen hidden" id="screen-verify" style="background: rgba(0,0,0,0.85); z-index: 2000;">
+  <div class="card" style="position: relative; max-width: 350px;">
+    <button class="close-btn" onclick="window.closeVerify()">×</button>
+    <div class="card-icon">📩</div>
+    <h2 style="color: var(--text);">Verify Email</h2>
+    <p style="font-size: 0.8rem; color: var(--muted); text-align: center;">Enter the 6-digit code sent to<br><span id="verify-email-display" style="color: var(--text); font-weight: 500;"></span></p>
+    <input class="field" type="text" id="verify-code" placeholder="000000" maxlength="6" style="text-align: center; font-size: 1.5rem; letter-spacing: 0.4rem; margin: 0.5rem 0;" onkeydown="if(event.key==='Enter')window.doVerifyCode()" />
+    <button class="btn-red" onclick="window.doVerifyCode()">Verify Account</button>
+    <div class="card-err" id="verify-err"></div>
+    <button class="btn-ghost" style="margin-top: 0.5rem; font-size: 0.75rem;" onclick="auth.currentUser.sendEmailVerification().then(() => alert('Verification email resent!'))">Resend Email</button>
   </div>
 </div>
 
@@ -926,10 +943,16 @@ async function doRegister() {
     });
 
     regOk.textContent = 'Account created! Welcome 🎉';
-    currentUser = email;
-    currentUsername = origUsername;
-    await loadUserData();
-    enterHub();
+
+    if (!email.endsWith('.internal')) {
+      await cred.user.sendEmailVerification();
+      // Auth observer will handle showing screen-verify
+    } else {
+      currentUser = email;
+      currentUsername = origUsername;
+      await loadUserData();
+      enterHub();
+    }
 
   } catch (e) {
     if (e.code === 'auth/email-already-in-use')    regErr.textContent = 'That email is already registered.';
@@ -955,6 +978,12 @@ async function doLogin() {
   }
   try {
     const cred = await auth.signInWithEmailAndPassword(email, pass);
+    // Block access if not verified and not an internal email
+    if (!cred.user.emailVerified && !cred.user.email.endsWith('.internal')) {
+      document.getElementById('verify-email-display').textContent = cred.user.email;
+      showScreen('screen-verify');
+      return;
+    }
     currentUser = cred.user.email;
     currentUsername = cred.user.displayName || cred.user.email.split('@')[0];
     await loadUserData(); enterHub();
@@ -1340,16 +1369,24 @@ window.startSnake=startSnake; window.startTetris=startTetris; window.resetTTT=re
 window.setSnakeColor=setSnakeColor; window.loadFriendsTab=loadFriendsTab;
 window.handleAccept=handleAccept; window.handleDecline=handleDecline; window.handleRemove=handleRemove;
 window.searchFriend=searchFriend; window.loadMessagesTab=loadMessagesTab; window.openChat=openChat; window.sendMessage=sendMessage;
+window.closeVerify=closeVerify; window.doVerifyCode=doVerifyCode;
 window.start3DTest=() => { if(window.init3D) window.init3D(); else alert('3D Script not loaded'); };
 window.stop3DTest=() => { if(window.close3D) window.close3D(); };
 
 // ============ INIT ============
 window.addEventListener('DOMContentLoaded', () => {
-  auth.onAuthStateChanged(user => {
+  auth.onAuthStateChanged(async user => {
     if (user) {
+      // Check verification on page load/refresh
+      if (!user.emailVerified && !user.email.endsWith('.internal')) {
+        document.getElementById('verify-email-display').textContent = user.email;
+        showScreen('screen-verify');
+        return;
+      }
       currentUser = user.email;
       currentUsername = user.displayName || user.email.split('@')[0];
-      loadUserData().then(() => enterHub());
+      await loadUserData();
+      enterHub();
     } else { doLogout(); }
   });
 });

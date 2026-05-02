@@ -234,7 +234,6 @@
   <div class="topbar">
     <div class="user-pill">👤 <span id="display-username">—</span></div>
     <div class="top-actions">
-      <button class="admin-dots" id="admin-btn" onclick="window.showAdminInfo()">⋮</button>
       <button class="logout-btn" onclick="window.doLogout()">logout ↩</button>
     </div>
   </div>
@@ -251,12 +250,12 @@
     <!-- HOME TAB -->
     <div class="panel active" id="tab-home">
       <div id="home-banner-container"></div>
-      <div class="games-soon-wrap">
-        <div class="games-soon-icon">🕹️</div>
-        <div class="games-soon-title">Games Coming Soon!</div>
-        <div class="games-soon-sub">New games are on their way and will replace the Classic games.<br>Stay tuned — they're gonna be way better!</div>
-        <div class="games-soon-badge">🚧 In Development</div>
-        <button id="admin-3d-btn" class="play-btn" style="display:none; margin-top:1.5rem;" onclick="window.start3DTest()">Admin: Test 3D Engine</button>
+      <div class="games-soon-wrap" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:360px; gap:1.2rem; text-align:center;">
+        <div class="games-soon-icon" style="font-size:3.5rem;">🕹️</div>
+        <div class="games-soon-title" style="font-family:'DM Mono',monospace; font-size:1.15rem; color:var(--text);">Games Coming Soon!</div>
+        <div class="games-soon-sub" style="font-family:'DM Mono',monospace; font-size:0.82rem; color:var(--muted); max-width:380px; line-height:1.7;">New games are on their way.<br>Stay tuned — they're gonna be way better!</div>
+        <div class="games-soon-badge" style="background:var(--red-dim); border:1px solid var(--red); color:var(--red); font-family:'DM Mono',monospace; font-size:0.78rem; padding:0.35rem 1rem; border-radius:99px; box-shadow:0 0 8px var(--red-glow);">🚧 In Development</div>
+        <button id="admin-3d-btn" class="btn-red" style="display:none; margin-top:1.5rem; width:auto; padding:0.65rem 1.5rem;" onclick="window.start3DTest()">Admin: Test 3D Engine</button>
       </div>
     </div>
 
@@ -365,11 +364,9 @@ const AWARD_MAP = {
 
 // ============ STATE ============
 let currentUser = null, avatar = DEFAULT_AVATAR, currentUsername = null, userAwards = [];
-let snakeColor = '#ffffff', snakeRainbow = false;
 let currentChatFriend = null, messagesUnsub = null;
-function renderCharMugshot() {
-  return `<div class="char-mugshot"></div>`;
-}
+
+function renderCharMugshot() { return `<div class="char-mugshot"></div>`; }
 
 // ============ CACHE ============
 let cachedFriends = null;
@@ -455,12 +452,12 @@ async function getUserProfileByEmail(email) {
     const snap = await db.collection('users').where('email', '==', email).limit(1).get();
     if (!snap.empty) {
       const d = snap.docs[0].data();
-      const profile = { username: d.username || email.split('@')[0], email, avatar: d.avatar || '👤', snake_best: d.snake_best || 0, tetris_best: d.tetris_best || 0, breakout_best: d.breakout_best || 0, status: d.status || 'offline' };
+      const profile = { username: d.username || email.split('@')[0], email, avatar: d.avatar || '👤', status: d.status || 'offline' };
       cachedProfiles[email] = profile;
       return profile;
     }
   } catch (e) { console.warn('getUserProfileByEmail error:', e); }
-  const fallback = { username: email.split('@')[0], email, avatar: '👤', snake_best: 0, tetris_best: 0, breakout_best: 0 };
+  const fallback = { username: email.split('@')[0], email, avatar: '👤' };
   cachedProfiles[email] = fallback;
   return fallback;
 }
@@ -475,11 +472,11 @@ async function batchGetProfiles(emails) {
         const snap = await db.collection('users').where('email', 'in', chunk).get();
         snap.docs.forEach(doc => {
           const d = doc.data();
-          if (d.email) cachedProfiles[d.email] = { username: d.username || d.email.split('@')[0], email: d.email, avatar: d.avatar || '👤', snake_best: d.snake_best || 0, tetris_best: d.tetris_best || 0, breakout_best: d.breakout_best || 0, status: d.status || 'offline' };
+          if (d.email) cachedProfiles[d.email] = { username: d.username || d.email.split('@')[0], email: d.email, avatar: d.avatar || '👤', status: d.status || 'offline' };
         });
-        chunk.forEach(e => { if (!cachedProfiles[e]) cachedProfiles[e] = { username: e.split('@')[0], email: e, avatar: '👤', snake_best: 0, tetris_best: 0, breakout_best: 0 }; });
+        chunk.forEach(e => { if (!cachedProfiles[e]) cachedProfiles[e] = { username: e.split('@')[0], email: e, avatar: '👤' }; });
       } catch (err) {
-        chunk.forEach(e => { if (!cachedProfiles[e]) cachedProfiles[e] = { username: e.split('@')[0], email: e, avatar: '👤', snake_best: 0, tetris_best: 0, breakout_best: 0 }; });
+        chunk.forEach(e => { if (!cachedProfiles[e]) cachedProfiles[e] = { username: e.split('@')[0], email: e, avatar: '👤' }; });
       }
     }
   }
@@ -674,39 +671,6 @@ async function sendMessage() {
   } catch (e) { alert('Failed to send message.'); }
 }
 
-// ============ COLOR PRESETS ============
-const PRESETS = [
-  { color: 'rainbow' }, { color: '#ffffff' }, { color: '#e03030' },
-  { color: '#f97316' }, { color: '#ffd700' }, { color: '#22c55e' },
-  { color: '#00f5ff' }, { color: '#3b82f6' }, { color: '#a855f7' },
-  { color: '#ff69b4' }, { color: '#000000' }
-];
-
-function buildColorPresets() {
-  const container = document.getElementById('color-presets');
-  container.innerHTML = '';
-  PRESETS.forEach(p => {
-    const btn = document.createElement('div');
-    btn.className = 'color-preset' + (p.color === 'rainbow' ? ' rainbow' : '');
-    if (p.color !== 'rainbow') btn.style.background = p.color;
-    if (p.color === '#000000') btn.style.border = '2px solid #555';
-    btn.title = p.color === 'rainbow' ? 'Rainbow' : p.color;
-    btn.onclick = () => setSnakeColor(p.color, btn);
-    container.appendChild(btn);
-  });
-  const presets = container.querySelectorAll('.color-preset');
-  if (snakeColor === 'rainbow') presets[0]?.classList.add('active');
-  else { const idx = PRESETS.findIndex(p => p.color === snakeColor); presets[idx > 0 ? idx : 1]?.classList.add('active'); }
-}
-
-function setSnakeColor(color, btn) {
-  document.querySelectorAll('.color-preset').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  if (color === 'rainbow') { snakeRainbow = true; snakeColor = 'rainbow'; }
-  else { snakeRainbow = false; snakeColor = color; const ci = document.getElementById('custom-color'); if (ci) ci.value = color; }
-  if (currentUsername) db.collection('users').doc(currentUsername.toLowerCase()).set({ snakeColor }, { merge: true }).catch(() => {});
-}
-
 function renderAwards() {
   const container = document.getElementById('profile-awards');
   container.innerHTML = '';
@@ -755,7 +719,6 @@ function enterHub() {
   if (currentUsername) db.collection('users').doc(currentUsername.toLowerCase()).update({ status: 'online' }).catch(() => {});
 
   const isAdmin = currentUsername && ADMINS.includes(currentUsername.toLowerCase());
-  document.getElementById('admin-btn').style.display = 'none'; // Topbar dots removed per request
   if (document.getElementById('admin-3d-btn')) document.getElementById('admin-3d-btn').style.display = isAdmin ? 'block' : 'none';
   if (isAdmin) earnAward('ADMIN');
 }
@@ -783,8 +746,6 @@ async function loadUserData() {
     const doc = await db.collection('users').doc(currentUsername.toLowerCase()).get();
     if (doc.exists) {
       const d = doc.data();
-      snakeColor = d.snakeColor || '#ffffff';
-      snakeRainbow = snakeColor === 'rainbow';
       avatar = d.avatar || DEFAULT_AVATAR;
       currentUsername = d.username || currentUsername;
       userAwards = d.awards || [];
@@ -830,8 +791,7 @@ async function doRegister() {
     } else {
        // Internal accounts get auto-created in DB
        await db.collection('users').doc(username).set({
-         uid: cred.user.uid, email: email, username: origUsername,
-         snake_best: 0, tetris_best: 0, breakout_best: 0, avatar: '👤', snakeColor: '#ffffff', awards: []
+         uid: cred.user.uid, email: email, username: origUsername, avatar: '👤', awards: []
        });
        currentUser = email; currentUsername = origUsername; await loadUserData(); enterHub();
     }

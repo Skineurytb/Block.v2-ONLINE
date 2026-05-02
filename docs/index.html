@@ -474,8 +474,10 @@ function subscribeFriendData() {
   if (friendsUnsub) friendsUnsub();
   if (requestsUnsub) requestsUnsub();
 
-  const q1 = db.collection('friends').where('user1', '==', currentUser);
-  const q2 = db.collection('friends').where('user2', '==', currentUser);
+  const uid = auth.currentUser.uid;
+  const q1 = db.collection('friends').where('user1Id', '==', uid);
+  const q2 = db.collection('friends').where('user2Id', '==', uid);
+
   let friends1 = [], friends2 = [];
 
   const rebuildFriends = () => {
@@ -490,7 +492,7 @@ function subscribeFriendData() {
   })();
 
   requestsUnsub = db.collection('friendRequests')
-    .where('to', '==', currentUser)
+    .where('toId', '==', uid)
     .where('status', '==', 'pending')
     .onSnapshot(snap => {
       const incoming = snap.docs.map(d => d.data().from);
@@ -577,9 +579,10 @@ function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 async function getFriendships() {
   if (cachedFriends !== null) return cachedFriends;
   if (!currentUser) return [];
+  const uid = auth.currentUser.uid;
   const [s1, s2] = await Promise.all([
-    db.collection('friends').where('user1', '==', currentUser).get(),
-    db.collection('friends').where('user2', '==', currentUser).get()
+    db.collection('friends').where('user1Id', '==', uid).get(),
+    db.collection('friends').where('user2Id', '==', uid).get()
   ]);
   const f = [];
   s1.forEach(d => f.push(d.data().user2));
@@ -591,9 +594,10 @@ async function getFriendships() {
 async function getFriendRequests() {
   if (cachedRequests !== null) return cachedRequests;
   if (!currentUser) return { incoming: [], outgoing: [] };
+  const uid = auth.currentUser.uid;
   const [inc, out] = await Promise.all([
-    db.collection('friendRequests').where('to', '==', currentUser).where('status', '==', 'pending').get(),
-    db.collection('friendRequests').where('from', '==', currentUser).where('status', '==', 'pending').get()
+    db.collection('friendRequests').where('toId', '==', uid).where('status', '==', 'pending').get(),
+    db.collection('friendRequests').where('fromId', '==', uid).where('status', '==', 'pending').get()
   ]);
   cachedRequests = { incoming: inc.docs.map(d => d.data().from), outgoing: out.docs.map(d => d.data().to) };
   return cachedRequests;
@@ -609,22 +613,40 @@ async function getFriendshipStatus(otherEmail) {
   return null;
 }
 
-async function sendFriendRequest(toEmail) {
-  if (!currentUser || !toEmail) return;
+async function sendFriendRequest(toEmail, toUid) {
+  if (!currentUser || !toEmail || !toUid) return;
   const status = await getFriendshipStatus(toEmail);
   if (status) return;
-  await db.collection('friendRequests').add({ from: currentUser, fromUsername: currentUsername, to: toEmail, status: 'pending', timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+  await db.collection('friendRequests').add({ 
+    from: currentUser, 
+    fromId: auth.currentUser.uid,
+    fromUsername: currentUsername, 
+    to: toEmail, 
+    toId: toUid,
+    status: 'pending', 
+    timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+  });
   invalidateCache();
 }
 
 async function acceptFriendRequest(fromEmail) {
   if (!currentUser || !fromEmail) return;
-  const snap = await db.collection('friendRequests').where('from', '==', fromEmail).where('to', '==', currentUser).where('status', '==', 'pending').limit(1).get();
+  const snap = await db.collection('friendRequests').where('from', '==', fromEmail).where('toId', '==', auth.currentUser.uid).where('status', '==', 'pending').limit(1).get();
   if (snap.empty) return;
   const reqDoc = snap.docs[0];
-  const fromUsername = reqDoc.data().fromUsername || fromEmail.split('@')[0];
+  const rdata = reqDoc.data();
+  const fromUsername = rdata.fromUsername || fromEmail.split('@')[0];
+  const fromId = rdata.fromId;
   const batch = db.batch();
-  batch.set(db.collection('friends').doc(), { user1: fromEmail, user2: currentUser, user1Username: fromUsername, user2Username: currentUsername, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  batch.set(db.collection('friends').doc(), { 
+    user1: fromEmail, 
+    user1Id: fromId,
+    user2: currentUser, 
+    user2Id: auth.currentUser.uid,
+    user1Username: fromUsername, 
+    user2Username: currentUsername, 
+    createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+  });
   batch.delete(reqDoc.ref);
   await batch.commit();
   invalidateCache();
@@ -641,9 +663,10 @@ async function declineFriendRequest(fromEmail) {
 
 async function removeFriend(otherEmail) {
   if (!currentUser || !otherEmail) return;
+  const uid = auth.currentUser.uid;
   const [s1, s2] = await Promise.all([
-    db.collection('friends').where('user1', '==', currentUser).where('user2', '==', otherEmail).get(),
-    db.collection('friends').where('user1', '==', otherEmail).where('user2', '==', currentUser).get()
+    db.collection('friends').where('user1Id', '==', uid).where('user2', '==', otherEmail).get(),
+    db.collection('friends').where('user2Id', '==', uid).where('user1', '==', otherEmail).get()
   ]);
   const batch = db.batch();
   s1.docs.forEach(d => batch.delete(d.ref));
@@ -1052,7 +1075,7 @@ async function searchFriend() {
       btn.onclick = () => handleAccept(email).then(() => searchFriend());
     } else {
       btn.className = 'btn-sm btn-sm-green'; btn.textContent = 'Add Friend';
-      btn.onclick = async () => { btn.disabled = true; btn.textContent = '⏳ Pending'; await sendFriendRequest(email); };
+      btn.onclick = async () => { btn.disabled = true; btn.textContent = '⏳ Pending'; await sendFriendRequest(email, data.uid); };
     }
     actions.appendChild(btn); card.appendChild(info); card.appendChild(actions);
     result.appendChild(card);

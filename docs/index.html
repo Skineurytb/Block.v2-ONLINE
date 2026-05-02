@@ -90,15 +90,9 @@
   .panel { display: none; }
   .panel.active { display: block; }
 
-  /* Yellow classic banner */
-  .classic-banner {
-    display: flex; align-items: center; gap: 0.6rem;
-    background: #fbbf24; color: #1c0f00;
-    border-radius: 8px; padding: 0.6rem 1rem;
-    font-family: 'DM Mono', monospace; font-size: 0.83rem; font-weight: 600;
-    margin-bottom: 1.2rem;
-    box-shadow: 0 0 16px rgba(251,191,36,0.2);
-  }
+  .home-banner { padding: 1rem; border-radius: 10px; font-family: 'DM Mono', monospace; font-size: 0.85rem; margin-bottom: 1.5rem; text-align: center; font-weight: 500; }
+  .banner-blue { background: #1e3a8a; color: #60a5fa; border: 1px solid #1d4ed8; }
+  .banner-green { background: #064e3b; color: #34d399; border: 1px solid #059669; }
 
   /* New games coming soon */
   .games-soon-wrap {
@@ -109,34 +103,6 @@
   .games-soon-title { font-family: 'DM Mono', monospace; font-size: 1.15rem; color: var(--text); }
   .games-soon-sub { font-family: 'DM Mono', monospace; font-size: 0.82rem; color: var(--muted); max-width: 380px; line-height: 1.7; }
   .games-soon-badge { background: var(--red-dim); border: 1px solid var(--red); color: var(--red); font-family: 'DM Mono', monospace; font-size: 0.78rem; padding: 0.35rem 1rem; border-radius: 99px; box-shadow: 0 0 8px var(--red-glow); }
-
-  .game-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; justify-content: center; }
-  .game-btn { padding: 0.4rem 0.9rem; border: 1px solid var(--border); border-radius: 99px; background: var(--tag); font-family: 'DM Mono', monospace; font-size: 0.8rem; cursor: pointer; color: var(--muted); transition: all 0.15s; }
-  .game-btn.active { background: var(--red); color: white; border-color: var(--red); }
-  .game-btn:hover:not(.active) { color: var(--text); border-color: #444; }
-
-  #game-container { background: #0f0f0f; border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; align-items: center; padding: 1.5rem; gap: 1rem; min-height: 420px; justify-content: center; }
-  canvas { display: block; border-radius: 6px; }
-  .game-info { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--muted); text-align: center; }
-  .score-row { display: flex; gap: 1.5rem; align-items: center; font-family: 'DM Mono', monospace; font-size: 0.95rem; color: var(--text); }
-  .score-item { display: flex; align-items: center; gap: 0.4rem; }
-  .score-display { font-family: 'DM Mono', monospace; font-size: 1rem; color: var(--text); }
-  #placeholder-msg { text-align: center; color: var(--muted); font-size: 0.9rem; }
-  #snake-area, #tetris-area, #ttt-area, #breakout-area { display: none; flex-direction: column; align-items: center; gap: 0.75rem; }
-  #tetris-canvas { background: #080808; }
-  #ttt-board { display: grid; grid-template-columns: repeat(3, 90px); grid-template-rows: repeat(3, 90px); gap: 6px; }
-  .ttt-cell { background: var(--tag); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; cursor: pointer; transition: all 0.1s; user-select: none; }
-  .ttt-cell:hover { border-color: var(--red); box-shadow: 0 0 8px var(--red-glow); }
-  .play-btn { padding: 0.5rem 1.4rem; background: var(--red); color: white; border: none; border-radius: 99px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; box-shadow: 0 0 10px var(--red-glow); }
-  .play-btn:hover { opacity: 0.85; }
-
-  .color-section { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
-  .color-presets { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; }
-  .color-preset { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: all 0.15s; }
-  .color-preset:hover, .color-preset.active { border-color: white; transform: scale(1.2); }
-  .color-preset.rainbow { background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); }
-  .color-row { display: flex; align-items: center; gap: 0.6rem; }
-  input[type="color"] { width: 32px; height: 32px; border: none; border-radius: 50%; cursor: pointer; background: none; padding: 0; }
 
   .profile-box { display: flex; flex-direction: column; gap: 1rem; }
   .profile-stat { background: var(--tag); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.2rem; display: flex; align-items: center; justify-content: space-between; }
@@ -255,9 +221,8 @@
     <button class="close-btn" onclick="window.closeVerify()">×</button>
     <div class="card-icon">📩</div>
     <h2 style="color: var(--text);">Verify Email</h2>
-    <p style="font-size: 0.8rem; color: var(--muted); text-align: center;">Enter the 6-digit code sent to<br><span id="verify-email-display" style="color: var(--text); font-weight: 500;"></span></p>
-    <input class="field" type="text" id="verify-code" placeholder="000000" maxlength="6" style="text-align: center; font-size: 1.5rem; letter-spacing: 0.4rem; margin: 0.5rem 0;" onkeydown="if(event.key==='Enter')window.doVerifyCode()" />
-    <button class="btn-red" onclick="window.doVerifyCode()">Verify Account</button>
+    <p style="font-size: 0.8rem; color: var(--muted); text-align: center;">A verification link has been sent to:<br><span id="verify-email-display" style="color: var(--text); font-weight: 500;"></span><br><br>Click the link in your inbox, then come back here.</p>
+    <button class="btn-red" onclick="window.checkVerificationStatus()">I've Verified My Email</button>
     <div class="card-err" id="verify-err"></div>
     <button class="btn-ghost" style="margin-top: 0.5rem; font-size: 0.75rem;" onclick="auth.currentUser.sendEmailVerification().then(() => alert('Verification email resent!'))">Resend Email</button>
   </div>
@@ -275,8 +240,7 @@
   </div>
   <div class="box">
     <div class="tabs">
-      <button class="tab active" onclick="window.switchTab('games-new',this)">Games</button>
-      <button class="tab" onclick="window.switchTab('games',this)">Games (Classic)</button>
+      <button class="tab active" onclick="window.switchTab('home',this)">Home</button>
       <button class="tab" onclick="window.switchTab('profile',this)">Profile</button>
       <button class="tab" onclick="window.switchTab('search',this)">Search</button>
       <button class="tab" onclick="window.switchTab('avatar',this)">Avatar</button>
@@ -284,8 +248,9 @@
       <button class="tab" onclick="window.switchTab('messages',this)">Messages</button>
     </div>
 
-    <!-- NEW GAMES (coming soon) -->
-    <div class="panel active" id="tab-games-new">
+    <!-- HOME TAB -->
+    <div class="panel active" id="tab-home">
+      <div id="home-banner-container"></div>
       <div class="games-soon-wrap">
         <div class="games-soon-icon">🕹️</div>
         <div class="games-soon-title">Games Coming Soon!</div>
@@ -295,78 +260,12 @@
       </div>
     </div>
 
-    <!-- CLASSIC GAMES -->
-    <div class="panel" id="tab-games">
-      <div class="classic-banner">⚠️ Classic games are going away soon!</div>
-      <div class="game-list">
-        <button class="game-btn" onclick="window.showGame('snake',this)">Snake</button>
-        <button class="game-btn" onclick="window.showGame('tetris',this)">Tetris</button>
-        <button class="game-btn" onclick="window.showGame('ttt',this)">Tic-Tac-Toe</button>
-        <button class="game-btn" onclick="window.showGame('breakout',this)">Breakout</button>
-      </div>
-      <div id="game-container">
-        <div id="placeholder-msg">← Pick a game to play</div>
-        <!-- SNAKE -->
-        <div id="snake-area">
-          <div class="score-row">
-            <div class="score-item">🍎 <span id="snake-score">0</span></div>
-            <div class="score-item">🏆 <span id="snake-best-display">0</span></div>
-          </div>
-          <canvas id="snake-canvas" width="360" height="360" style="background:#080808;border-radius:12px;"></canvas>
-          <div class="game-info">WASD or Arrow keys to move</div>
-          <div class="color-section">
-            <div class="section-label">Snake color</div>
-            <div class="color-presets" id="color-presets"></div>
-            <div class="color-row">
-              <input type="color" id="custom-color" value="#ffffff" title="Pick any color" oninput="window.setSnakeColor(this.value,null)" />
-              <span style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted);">custom</span>
-            </div>
-          </div>
-          <button class="play-btn" onclick="window.startSnake()">Start / Restart</button>
-        </div>
-        <!-- TETRIS -->
-        <div id="tetris-area">
-          <div class="score-row">
-            <div class="score-item">Score: <span id="tetris-score">0</span></div>
-            <div class="score-item">🏆 <span id="tetris-best-display">0</span></div>
-          </div>
-          <canvas id="tetris-canvas" width="200" height="400"></canvas>
-          <div class="game-info">Arrow keys · Up = rotate · Down = drop</div>
-          <button class="play-btn" onclick="window.startTetris()">Start / Restart</button>
-        </div>
-        <!-- TIC TAC TOE -->
-        <div id="ttt-area">
-          <div class="score-display" id="ttt-status">X's turn</div>
-          <div id="ttt-board"></div>
-          <div style="display:flex;gap:0.5rem;align-items:center;">
-            <div style="display:flex; flex-direction:column; gap:0.4rem;">
-              <button class="play-btn" onclick="window.resetTTT()">New Game</button>
-              <select id="ttt-difficulty" class="field" style="padding:0.3rem; font-size:0.75rem; width:100px;">
-                <option value="easy">Easy</option><option value="medium">Medium</option><option value="impossible" selected>Impossible</option>
-              </select>
-            </div>
-            <button class="game-btn" id="ai-toggle" onclick="window.toggleAI()" style="border-radius:99px;">🤖 AI: OFF</button>
-          </div>
-          <div class="game-info">X = You &nbsp;·&nbsp; O = AI (when on)</div>
-        </div>
-        <!-- BREAKOUT -->
-        <div id="breakout-area">
-          <div class="score-display">Score: <span id="breakout-score">0</span></div>
-          <canvas id="breakout-canvas" width="400" height="300" style="background:#080808;"></canvas>
-          <div class="game-info">Mouse or ← → keys to move paddle</div>
-          <button class="play-btn" onclick="window.startBreakout()">Start / Restart</button>
-        </div>
-      </div>
-    </div>
 
     <!-- PROFILE -->
     <div class="panel" id="tab-profile">
       <div class="profile-box">
         <div class="profile-stat"><span class="label">👤 Avatar</span><span class="value" id="profile-avatar">👤</span></div>
         <div class="profile-stat"><span class="label">👤 Username</span><span class="value" id="profile-username">—</span></div>
-        <div class="profile-stat"><span class="label">🐍 Snake Best</span><span class="value" id="profile-snake">0</span></div>
-        <div class="profile-stat"><span class="label">🏆 Tetris Best</span><span class="value" id="profile-tetris">0</span></div>
-        <div class="profile-stat"><span class="label">🏓 Breakout Best</span><span class="value" id="profile-breakout">0</span></div>
         <div class="profile-stat" style="flex-direction:column; align-items:flex-start; gap:0.5rem;"><span class="label">🏅 Awards</span><div class="awards-grid" id="profile-awards"></div></div>
       </div>
     </div>
@@ -465,11 +364,9 @@ const AWARD_MAP = {
 // ============ DEFAULT AVATAR ============
 
 // ============ STATE ============
-let currentUser = null, tetrisBest = 0, snakeBestDB = 0, avatar = DEFAULT_AVATAR, currentUsername = null, userAwards = [];
+let currentUser = null, avatar = DEFAULT_AVATAR, currentUsername = null, userAwards = [];
 let snakeColor = '#ffffff', snakeRainbow = false;
 let currentChatFriend = null, messagesUnsub = null;
-
-// ============ AVATAR RENDERER ============
 function renderCharMugshot() {
   return `<div class="char-mugshot"></div>`;
 }
@@ -838,14 +735,17 @@ function enterHub() {
   const name = currentUsername || currentUser?.split('@')[0] || '—';
   document.getElementById('display-username').textContent = name;
   document.getElementById('profile-username').textContent = name;
-  document.getElementById('profile-snake').textContent = snakeBestDB;
-  document.getElementById('profile-tetris').textContent = tetrisBest;
   document.getElementById('profile-avatar').innerHTML = renderCharMugshot();
-  document.getElementById('tetris-best-display').textContent = tetrisBest;
-  document.getElementById('snake-best-display').textContent = snakeBestDB;
-  buildColorPresets();
   renderAwards();
   subscribeFriendData();
+
+  // Handle Home Banners
+  const bannerContainer = document.getElementById('home-banner-container');
+  if (currentUser && currentUser.endsWith('.internal')) {
+    bannerContainer.innerHTML = `<div class="home-banner banner-blue">Please verify your email to secure your account and unlock all features!</div>`;
+  } else if (currentUser) {
+    bannerContainer.innerHTML = `<div class="home-banner banner-green">Your email is added and everything is all good for now!</div>`;
+  }
 
   // Request notification permission
   if ("Notification" in window && Notification.permission === "default") {
@@ -864,7 +764,7 @@ function doLogout() {
   if (currentUsername) db.collection('users').doc(currentUsername.toLowerCase()).update({ status: 'offline' }).catch(() => {});
   if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
   unsubscribeFriendData();
-  currentUser = null; tetrisBest = 0; snakeBestDB = 0; avatar = DEFAULT_AVATAR; currentUsername = null; currentChatFriend = null; userAwards = [];
+  currentUser = null; avatar = DEFAULT_AVATAR; currentUsername = null; currentChatFriend = null; userAwards = [];
   document.getElementById('main').style.display = 'none';
   document.getElementById('login-user').value = '';
   document.getElementById('login-pass').value = '';
@@ -883,14 +783,11 @@ async function loadUserData() {
     const doc = await db.collection('users').doc(currentUsername.toLowerCase()).get();
     if (doc.exists) {
       const d = doc.data();
-      tetrisBest = d.tetris_best || 0;
-      snakeBestDB = d.snake_best || 0;
       snakeColor = d.snakeColor || '#ffffff';
       snakeRainbow = snakeColor === 'rainbow';
       avatar = d.avatar || DEFAULT_AVATAR;
       currentUsername = d.username || currentUsername;
       userAwards = d.awards || [];
-      document.getElementById('profile-breakout').textContent = d.breakout_best || 0;
     }
   } catch (e) { console.warn('loadUserData error:', e); }
 }
@@ -926,32 +823,17 @@ async function doRegister() {
     const cred = await auth.createUserWithEmailAndPassword(email, pass);
     await cred.user.updateProfile({ displayName: origUsername });
 
-    // Force-refresh the token so Firestore rules see request.auth immediately
-    await cred.user.getIdToken(true);
-
-    // Write the user doc — now rules will allow it since token is fresh
-    await db.collection('users').doc(username).set({
-      uid: cred.user.uid,
-      email: email, // Store the actual email used for Auth (real or internal)
-      username: origUsername,
-      snake_best: 0,
-      tetris_best: 0,
-      breakout_best: 0,
-      avatar: '👤',
-      snakeColor: '#ffffff',
-      awards: []
-    });
-
-    regOk.textContent = 'Account created! Welcome 🎉';
-
     if (!email.endsWith('.internal')) {
       await cred.user.sendEmailVerification();
-      // Auth observer will handle showing screen-verify
+      document.getElementById('verify-email-display').textContent = email;
+      showScreen('screen-verify');
     } else {
-      currentUser = email;
-      currentUsername = origUsername;
-      await loadUserData();
-      enterHub();
+       // Internal accounts get auto-created in DB
+       await db.collection('users').doc(username).set({
+         uid: cred.user.uid, email: email, username: origUsername,
+         snake_best: 0, tetris_best: 0, breakout_best: 0, avatar: '👤', snakeColor: '#ffffff', awards: []
+       });
+       currentUser = email; currentUsername = origUsername; await loadUserData(); enterHub();
     }
 
   } catch (e) {
@@ -1151,225 +1033,12 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => { keysDown[e.key] = false; });
 
-/* SNAKE */
-let snakeGame, snakeBestLocal = 0, rainbowTick = 0;
-let snakeDir = { x: 1, y: 0 }, snakeNextDir = { x: 1, y: 0 };
-
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h);
-  ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
-}
-function hsl(h, s, l) { return `hsl(${h},${s}%,${l}%)`; }
-
-function snakeKeyHandler(e) {
-  if ((e.key==='ArrowUp'   ||e.key==='w'||e.key==='W')&&snakeDir.y===0) snakeNextDir={x:0,y:-1};
-  else if ((e.key==='ArrowDown' ||e.key==='s'||e.key==='S')&&snakeDir.y===0) snakeNextDir={x:0,y:1};
-  else if ((e.key==='ArrowLeft' ||e.key==='a'||e.key==='A')&&snakeDir.x===0) snakeNextDir={x:-1,y:0};
-  else if ((e.key==='ArrowRight'||e.key==='d'||e.key==='D')&&snakeDir.x===0) snakeNextDir={x:1,y:0};
-}
-let snakeKeyAttached = false;
-
-function startSnake() {
-  clearInterval(snakeGame); rainbowTick = 0;
-  snakeDir = { x:1, y:0 }; snakeNextDir = { x:1, y:0 };
-  if (!snakeKeyAttached) { window.addEventListener('keydown', snakeKeyHandler); snakeKeyAttached = true; }
-  const canvas = document.getElementById('snake-canvas'), ctx = canvas.getContext('2d');
-  const size = 20, cols = 18, rows = 18;
-  let snake = [{x:9,y:9},{x:8,y:9},{x:7,y:9}], score = 0, running = true, food = rndFood();
-  function rndFood() { let f; do { f={x:Math.floor(Math.random()*cols),y:Math.floor(Math.random()*rows)}; } while(snake.some(s=>s.x===f.x&&s.y===f.y)); return f; }
-  snakeGame = setInterval(() => {
-    if (!running) return; rainbowTick++; snakeDir = snakeNextDir;
-    const head = { x: snake[0].x+snakeDir.x, y: snake[0].y+snakeDir.y };
-    if (head.x<0||head.x>=cols||head.y<0||head.y>=rows||snake.some(s=>s.x===head.x&&s.y===head.y)) {
-      running = false;
-      if (score > snakeBestLocal) snakeBestLocal = score;
-      document.getElementById('snake-best-display').textContent = Math.max(snakeBestLocal, snakeBestDB);
-      if (currentUser && currentUsername && score > snakeBestDB) {
-        db.collection('users').doc(currentUsername.toLowerCase()).update({ snake_best: score })
-          .then(() => { snakeBestDB = score; document.getElementById('profile-snake').textContent = score; document.getElementById('snake-best-display').textContent = score; })
-          .catch(() => {});
-      }
-      ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.fillStyle = '#e03030'; ctx.font = 'bold 20px monospace'; ctx.textAlign = 'center';
-      ctx.fillText('Game Over!', canvas.width/2, canvas.height/2-14);
-      ctx.fillStyle = '#f0ede8'; ctx.font = '14px monospace';
-      ctx.fillText('🍎 '+score+'   🏆 '+Math.max(snakeBestLocal,snakeBestDB), canvas.width/2, canvas.height/2+14);
-      return;
-    }
-    snake.unshift(head);
-    if (score >= 50) earnAward('SNAKE_50');
-    if (snake.length === cols * rows) earnAward('SNAKE_FULL');
-    if (head.x===food.x && head.y===food.y) { score++; document.getElementById('snake-score').textContent = score; food = rndFood(); }
-    else snake.pop();
-    ctx.fillStyle = '#080808'; ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.font = (size-2)+'px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('🍎', food.x*size+size/2, food.y*size+size/2);
-    snake.forEach((s, i) => {
-      const pad = i===0?1:2, r = i===0?6:5;
-      if (snakeRainbow) ctx.fillStyle = hsl((rainbowTick*6+i*20)%360, 100, 60);
-      else { ctx.globalAlpha = Math.max(0.3, 1-i*0.04); ctx.fillStyle = snakeColor; }
-      roundRect(ctx, s.x*size+pad, s.y*size+pad, size-pad*2, size-pad*2, r); ctx.fill(); ctx.globalAlpha = 1;
-      if (i === 0) {
-        ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        const cx = s.x*size+size/2, cy = s.y*size+size/2, perp = {x:-snakeDir.y, y:snakeDir.x};
-        ctx.beginPath(); ctx.arc(cx+snakeDir.x*4+perp.x*3, cy+snakeDir.y*4+perp.y*3, 2, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(cx+snakeDir.x*4-perp.x*3, cy+snakeDir.y*4-perp.y*3, 2, 0, Math.PI*2); ctx.fill();
-      }
-    });
-  }, 130);
-}
-
-/* TETRIS */
-let tetrisRAF, tetrisCurrentScore = 0;
-const PIECES = [[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]],[[1,1,0],[0,1,1]],[[0,1,1],[1,1,0]]];
-const TCOLORS = ['#00f5ff','#ffd700','#a855f7','#f97316','#3b82f6','#22c55e','#ef4444'];
-
-function startTetris() {
-  cancelAnimationFrame(tetrisRAF); tetrisCurrentScore = 0;
-  const canvas = document.getElementById('tetris-canvas'), ctx = canvas.getContext('2d');
-  const W = 10, H = 20, BS = 20;
-  let board = Array.from({length:H}, () => Array(W).fill(0));
-  let cb    = Array.from({length:H}, () => Array(W).fill(null));
-  let ts = 0;
-  document.getElementById('tetris-score').textContent = 0;
-  document.getElementById('tetris-best-display').textContent = tetrisBest;
-  let pi = Math.floor(Math.random()*7), piece = PIECES[pi], color = TCOLORS[pi], px = 3, py = 0, lt = 0;
-  const rotate = p => p[0].map((_,i) => p.map(r => r[i])).map(r => r.reverse());
-  const valid  = (p,x,y) => p.every((row,dy) => row.every((v,dx) => !v||(y+dy>=0&&y+dy<H&&x+dx>=0&&x+dx<W&&!board[y+dy][x+dx])));
-  function lock() {
-    piece.forEach((row,dy) => row.forEach((v,dx) => { if(v) { board[py+dy][px+dx]=1; cb[py+dy][px+dx]=color; } }));
-    for (let r=H-1; r>=0; r--) {
-      if (board[r].every(c=>c)) { board.splice(r,1); board.unshift(Array(W).fill(0)); cb.splice(r,1); cb.unshift(Array(W).fill(null)); ts+=100; tetrisCurrentScore=ts; document.getElementById('tetris-score').textContent=ts; r++; }
-    }
-    pi=Math.floor(Math.random()*7); piece=PIECES[pi]; color=TCOLORS[pi]; px=3; py=0;
-    if (!valid(piece,px,py)) {
-      if (currentUser && currentUsername && tetrisCurrentScore > tetrisBest) {
-        db.collection('users').doc(currentUsername.toLowerCase()).update({tetris_best:tetrisCurrentScore})
-          .then(() => { tetrisBest=tetrisCurrentScore; document.getElementById('profile-tetris').textContent=tetrisBest; document.getElementById('tetris-best-display').textContent=tetrisBest; })
-          .catch(() => {});
-      }
-      ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.fillStyle='#e03030'; ctx.font='bold 16px monospace'; ctx.textAlign='center';
-      ctx.fillText('Game Over', canvas.width/2, canvas.height/2-10);
-      ctx.fillStyle='#f0ede8'; ctx.font='13px monospace';
-      ctx.fillText('Score: '+tetrisCurrentScore, canvas.width/2, canvas.height/2+12);
-      cancelAnimationFrame(tetrisRAF);
-    }
-  }
-  if (window._tetrisKeyHandler) window.removeEventListener('keydown', window._tetrisKeyHandler);
-  window._tetrisKeyHandler = e => {
-    if (e.key==='ArrowLeft' &&valid(piece,px-1,py)) px--;
-    else if (e.key==='ArrowRight'&&valid(piece,px+1,py)) px++;
-    else if (e.key==='ArrowDown' &&valid(piece,px,py+1)) py++;
-    else if (e.key==='ArrowUp')   { const r=rotate(piece); if(valid(r,px,py)) piece=r; }
-  };
-  window.addEventListener('keydown', window._tetrisKeyHandler);
-  function loop(t) {
-    if (t-lt>500) { if(valid(piece,px,py+1)) py++; else lock(); lt=t; }
-    ctx.fillStyle='#080808'; ctx.fillRect(0,0,canvas.width,canvas.height);
-    board.forEach((row,y) => row.forEach((v,x) => { if(v) { ctx.fillStyle=cb[y][x]; ctx.fillRect(x*BS,y*BS,BS-1,BS-1); } }));
-    piece.forEach((row,dy) => row.forEach((v,dx) => { if(v) { ctx.fillStyle=color; ctx.fillRect((px+dx)*BS,(py+dy)*BS,BS-1,BS-1); } }));
-    tetrisRAF = requestAnimationFrame(loop);
-  }
-  tetrisRAF = requestAnimationFrame(loop);
-}
-
-/* TIC TAC TOE */
-let tttBoard, tttTurn, tttOver, tttAI = false;
-function toggleAI() {
-  tttAI = !tttAI;
-  const btn = document.getElementById('ai-toggle');
-  btn.textContent = tttAI ? '🤖 AI: ON' : '🤖 AI: OFF';
-  btn.style.background   = tttAI ? 'var(--red)' : '';
-  btn.style.color = tttAI ? 'white' : '';
-  btn.style.borderColor  = tttAI ? 'var(--red)' : '';
-  resetTTT();
-}
-function resetTTT() {
-  tttBoard = Array(9).fill(''); tttTurn = 'X'; tttOver = false;
-  const diff = document.getElementById('ttt-difficulty').value;
-  document.getElementById('ttt-status').textContent = tttAI ? 'Your turn (X)' : "X's turn";
-  const b = document.getElementById('ttt-board'); b.innerHTML = '';
-  for (let i=0; i<9; i++) { const c=document.createElement('div'); c.className='ttt-cell'; c.dataset.i=i; c.onclick=()=>tttMove(i); b.appendChild(c); }
-}
-const WIN_LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-function checkWinner(b) { for(const[a,x,c]of WIN_LINES){if(b[a]&&b[a]===b[x]&&b[a]===b[c])return b[a];}if(b.every(c=>c))return'draw';return null; }
-function minimax(b,isMax) { const w=checkWinner(b);if(w==='O')return 10;if(w==='X')return -10;if(w==='draw')return 0;let best=isMax?-Infinity:Infinity;for(let i=0;i<9;i++){if(!b[i]){b[i]=isMax?'O':'X';const s=minimax(b,!isMax);b[i]='';best=isMax?Math.max(best,s):Math.min(best,s);}}return best; }
-function bestMove(b) { let best=-Infinity,move=-1;for(let i=0;i<9;i++){if(!b[i]){b[i]='O';const s=minimax(b,false);b[i]='';if(s>best){best=s;move=i;}}}return move; }
-function getAIMove(b, difficulty) {
-  const empty = b.map((v, i) => v === '' ? i : null).filter(v => v !== null);
-  if (difficulty === 'easy' && Math.random() < 0.8) return empty[Math.floor(Math.random() * empty.length)];
-  if (difficulty === 'medium' && Math.random() < 0.4) return empty[Math.floor(Math.random() * empty.length)];
-  return bestMove(b);
-}
-function renderCell(i) { document.querySelector(`[data-i="${i}"]`).textContent = tttBoard[i]==='X'?'✕':'○'; }
-function tttMove(i) {
-  if (tttOver||tttBoard[i]) return;
-  if (tttAI&&tttTurn==='O') return;
-  tttBoard[i]=tttTurn; renderCell(i);
-  const w=checkWinner(tttBoard); if(w){endGame(w);return;}
-  tttTurn=tttTurn==='X'?'O':'X';
-  if (tttAI&&tttTurn==='O') {
-    document.getElementById('ttt-status').textContent='🤖 AI is thinking...';
-    const diff = document.getElementById('ttt-difficulty').value;
-    setTimeout(() => { const m=getAIMove(tttBoard, diff);tttBoard[m]='O';renderCell(m);const w2=checkWinner(tttBoard);if(w2){endGame(w2);return;}tttTurn='X';document.getElementById('ttt-status').textContent='Your turn (X)'; }, 300);
-  } else { document.getElementById('ttt-status').textContent = tttAI?'Your turn (X)':tttTurn+"'s turn"; }
-}
-function endGame(w) {
-  tttOver=true;
-  if(w==='draw') document.getElementById('ttt-status').textContent="It's a draw!";
-  else if(tttAI) {
-    if (w === 'X') {
-      const diff = document.getElementById('ttt-difficulty').value;
-      if (diff === 'easy') earnAward('TTT_EASY');
-      else if (diff === 'medium') earnAward('TTT_MEDIUM');
-      else if (diff === 'impossible') earnAward('TTT_IMPOSSIBLE');
-      document.getElementById('ttt-status').textContent='You win! 🎉';
-    } else document.getElementById('ttt-status').textContent='🤖 AI wins!';
-  } else document.getElementById('ttt-status').textContent=w+' wins! 🎉';
-}
-resetTTT();
-
-/* BREAKOUT */
-let breakoutRAF;
-function startBreakout() {
-  cancelAnimationFrame(breakoutRAF);
-  const canvas = document.getElementById('breakout-canvas');
-  if (window._breakoutMouseHandler) canvas.removeEventListener('mousemove', window._breakoutMouseHandler);
-  const ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height;
-  let score = 0; document.getElementById('breakout-score').textContent = 0;
-  let paddle = {x:W/2-40,y:H-20,w:80,h:8}, ball = {x:W/2,y:H-40,vx:3,vy:-3,r:7}, bricks = [];
-  for (let r=0; r<4; r++) for (let c=0; c<8; c++) bricks.push({x:10+c*48,y:30+r*22,w:42,h:16,alive:true,color:['#e03030','#c02020','#a01010','#801010'][r]});
-  window._breakoutMouseHandler = e => { const r=canvas.getBoundingClientRect(); paddle.x=e.clientX-r.left-paddle.w/2; };
-  canvas.addEventListener('mousemove', window._breakoutMouseHandler);
-  function loop() {
-    if (keysDown['ArrowLeft'])  paddle.x=Math.max(0,paddle.x-5);
-    if (keysDown['ArrowRight']) paddle.x=Math.min(W-paddle.w,paddle.x+5);
-    ball.x+=ball.vx; ball.y+=ball.vy;
-    if (ball.x<ball.r||ball.x>W-ball.r) ball.vx*=-1;
-    if (ball.y<ball.r) ball.vy*=-1;
-    if (ball.y>H) { ctx.fillStyle='rgba(0,0,0,0.65)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#e03030';ctx.font='bold 18px monospace';ctx.textAlign='center';ctx.fillText('Game Over — '+score,W/2,H/2);return; }
-    if (ball.y+ball.r>=paddle.y&&ball.x>=paddle.x&&ball.x<=paddle.x+paddle.w&&ball.vy>0) ball.vy*=-1;
-    bricks.forEach(b => { if(!b.alive)return;if(ball.x>b.x&&ball.x<b.x+b.w&&ball.y>b.y&&ball.y<b.y+b.h){b.alive=false;ball.vy*=-1;score+=10;document.getElementById('breakout-score').textContent=score;} });
-    if (bricks.every(b=>!b.alive)) { ctx.fillStyle='rgba(0,0,0,0.65)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#e03030';ctx.font='bold 18px monospace';ctx.textAlign='center';ctx.fillText('You Win! '+score,W/2,H/2);return; }
-    ctx.fillStyle='#080808';ctx.fillRect(0,0,W,H);
-    bricks.forEach(b => { if(b.alive){ctx.fillStyle=b.color;ctx.fillRect(b.x,b.y,b.w,b.h);} });
-    ctx.fillStyle='#aaa';ctx.fillRect(paddle.x,paddle.y,paddle.w,paddle.h);
-    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fill();
-    breakoutRAF=requestAnimationFrame(loop);
-  }
-  breakoutRAF=requestAnimationFrame(loop);
-}
-
 // ============ EXPOSE ============
 window.showScreen=showScreen; window.doLogin=doLogin; window.doRegister=doRegister; window.doLogout=doLogout; window.showAdminInfo=showAdminInfo;
-window.switchTab=switchTab; window.showGame=showGame;
-window.startSnake=startSnake; window.startTetris=startTetris; window.resetTTT=resetTTT; window.toggleAI=toggleAI; window.startBreakout=startBreakout;
-window.setSnakeColor=setSnakeColor; window.loadFriendsTab=loadFriendsTab;
+window.switchTab=switchTab; window.loadFriendsTab=loadFriendsTab;
 window.handleAccept=handleAccept; window.handleDecline=handleDecline; window.handleRemove=handleRemove;
 window.searchFriend=searchFriend; window.loadMessagesTab=loadMessagesTab; window.openChat=openChat; window.sendMessage=sendMessage;
-window.closeVerify=closeVerify; window.doVerifyCode=doVerifyCode;
+window.closeVerify=closeVerify; window.checkVerificationStatus=checkVerificationStatus;
 window.start3DTest=() => { if(window.init3D) window.init3D(); else alert('3D Script not loaded'); };
 window.stop3DTest=() => { if(window.close3D) window.close3D(); };
 

@@ -218,7 +218,6 @@
 <!-- VERIFY POPUP -->
 <div class="screen hidden" id="screen-verify" style="background: rgba(0,0,0,0.85); z-index: 2000;">
   <div class="card" style="position: relative; max-width: 350px;">
-    <button class="close-btn" onclick="window.closeVerify()">×</button>
     <div class="card-icon">📩</div>
     <h2 style="color: var(--text);">Verify Email</h2>
     <p style="font-size: 0.8rem; color: var(--muted); text-align: center;">A verification link has been sent to:<br><span id="verify-email-display" style="color: var(--text); font-weight: 500;"></span><br><br>Click the link in your inbox, then come back here.</p>
@@ -524,10 +523,24 @@ async function getFriendshipStatus(otherEmail) {
   return null;
 }
 
+function checkFriendLimit() {
+  const isInternal = currentUser && currentUser.endsWith('.internal');
+  const limit = isInternal ? 10 : 100;
+  return { limit, isInternal };
+}
+
 async function sendFriendRequest(toEmail, toUid) {
   if (!currentUser || !toEmail || !toUid) return;
   const status = await getFriendshipStatus(toEmail);
   if (status) return;
+  
+  const { limit, isInternal } = checkFriendLimit();
+  const friends = await getFriendships();
+  if (friends.length >= limit) {
+    alert(`Friend limit reached (${limit}). ${isInternal ? "Add a real email to increase this to 100." : ""}`);
+    return;
+  }
+
   await db.collection('friendRequests').add({ 
     from: currentUser, 
     fromId: auth.currentUser.uid,
@@ -543,6 +556,14 @@ async function sendFriendRequest(toEmail, toUid) {
 async function acceptFriendRequest(fromEmail) {
   if (!currentUser || !fromEmail) return;
   const snap = await db.collection('friendRequests').where('from', '==', fromEmail).where('toId', '==', auth.currentUser.uid).where('status', '==', 'pending').limit(1).get();
+  
+  const { limit, isInternal } = checkFriendLimit();
+  const friends = await getFriendships();
+  if (friends.length >= limit) {
+    alert(`Cannot accept request. Friend limit reached (${limit}). ${isInternal ? "Add a real email to increase this to 100." : ""}`);
+    return;
+  }
+
   if (snap.empty) return;
   const reqDoc = snap.docs[0];
   const rdata = reqDoc.data();
@@ -607,6 +628,11 @@ async function renderMessagesSidebar() {
 async function loadMessagesTab() { await renderMessagesSidebar(); }
 
 async function openChat(event, friendEmail) {
+  if (currentUser && currentUser.endsWith('.internal')) {
+    alert('You must add and verify a real email address to message friends.');
+    return;
+  }
+
   currentChatFriend = friendEmail;
   document.querySelectorAll('.messages-friend-item').forEach(i => i.classList.remove('active'));
   if (event?.currentTarget) event.currentTarget.classList.add('active');
@@ -663,6 +689,11 @@ async function sendMessage() {
   const input = document.getElementById('messages-input');
   const text = input.value.trim();
   if (!text || !currentChatFriend) return;
+  if (currentUser && currentUser.endsWith('.internal')) {
+    alert('You must verify your email to send messages.');
+    return;
+  }
+
   if (text.length > 500) { alert('Message too long (max 500 chars)'); return; }
   input.value = '';
   const convId = [currentUser, currentChatFriend].sort().join('_');
@@ -737,6 +768,22 @@ function doLogout() {
 
 function showAdminInfo() {
   alert(`ADMIN INFO\nEmail: ${currentUser}\nStatus: Verified Operator`);
+}
+
+async function checkVerificationStatus() {
+  const err = document.getElementById('verify-err');
+  err.textContent = '';
+  try {
+    await auth.currentUser.reload();
+    if (auth.currentUser.emailVerified) {
+      currentUser = auth.currentUser.email;
+      currentUsername = auth.currentUser.displayName || currentUser.split('@')[0];
+      await loadUserData();
+      enterHub();
+    } else {
+      err.textContent = 'Email not verified yet. Please click the link in your email.';
+    }
+  } catch (e) { err.textContent = 'Error checking status. Try again.'; }
 }
 
 // ============ AUTH ============
@@ -998,7 +1045,7 @@ window.showScreen=showScreen; window.doLogin=doLogin; window.doRegister=doRegist
 window.switchTab=switchTab; window.loadFriendsTab=loadFriendsTab;
 window.handleAccept=handleAccept; window.handleDecline=handleDecline; window.handleRemove=handleRemove;
 window.searchFriend=searchFriend; window.loadMessagesTab=loadMessagesTab; window.openChat=openChat; window.sendMessage=sendMessage;
-window.closeVerify=closeVerify; window.checkVerificationStatus=checkVerificationStatus;
+window.checkVerificationStatus=checkVerificationStatus;
 window.start3DTest=() => { if(window.init3D) window.init3D(); else alert('3D Script not loaded'); };
 window.stop3DTest=() => { if(window.close3D) window.close3D(); };
 

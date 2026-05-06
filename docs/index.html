@@ -222,6 +222,7 @@
     <h2 style="color: var(--text);">Verify Email</h2>
     <p style="font-size: 0.8rem; color: var(--muted); text-align: center;">A verification link has been sent to:<br><span id="verify-email-display" style="color: var(--text); font-weight: 500;"></span><br><br>Click the link in your inbox, then come back here.</p>
     <button class="btn-red" onclick="window.checkVerificationStatus()">I've Verified My Email</button>
+    <p style="font-size: 0.7rem; color: var(--muted); text-align: center; margin-top: -0.6rem;">Check your spam folder if you don't see the email!</p>
     <div class="card-err" id="verify-err"></div>
     <button class="btn-ghost" style="margin-top: 0.5rem; font-size: 0.75rem;" onclick="auth.currentUser.sendEmailVerification().then(() => alert('Verification email resent!'))">Resend Email</button>
   </div>

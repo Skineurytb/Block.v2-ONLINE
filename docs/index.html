@@ -437,9 +437,9 @@ function refreshFriendsUI() {
 async function earnAward(id) {
   if (!currentUsername || userAwards.includes(id)) return;
   try {
-    await db.collection('users').doc(currentUsername.toLowerCase()).update({
+    await db.collection('users').doc(currentUsername.toLowerCase()).set({
       awards: firebase.firestore.FieldValue.arrayUnion(id)
-    });
+    }, { merge: true });
     userAwards.push(id);
     if (document.getElementById('tab-profile').classList.contains('active')) renderAwards();
   } catch (e) { console.warn('earnAward error:', e); }
@@ -789,14 +789,24 @@ async function checkVerificationStatus() {
 
 // ============ AUTH ============
 async function loadUserData() {
-  if (!currentUsername) return;
+  if (!currentUsername || !auth.currentUser) return;
   try {
-    const doc = await db.collection('users').doc(currentUsername.toLowerCase()).get();
+    const userRef = db.collection('users').doc(currentUsername.toLowerCase());
+    const doc = await userRef.get();
     if (doc.exists) {
       const d = doc.data();
       avatar = d.avatar || DEFAULT_AVATAR;
       currentUsername = d.username || currentUsername;
       userAwards = d.awards || [];
+    } else {
+      // Ensure profile exists for verified users to prevent permission errors
+      await userRef.set({
+        uid: auth.currentUser.uid,
+        email: auth.currentUser.email,
+        username: currentUsername,
+        avatar: '👤',
+        awards: []
+      }, { merge: true });
     }
   } catch (e) { console.warn('loadUserData error:', e); }
 }

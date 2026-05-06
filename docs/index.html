@@ -144,7 +144,8 @@
   .tab-badge { display: inline-flex; align-items: center; justify-content: center; background: var(--red); color: white; font-size: 0.6rem; font-weight: 700; border-radius: 99px; padding: 0.05rem 0.35rem; margin-left: 0.3rem; font-family: 'DM Mono', monospace; line-height: 1.4; vertical-align: middle; }
 
   .messages-container { display: flex; height: 500px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .messages-sidebar { width: 250px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+  .messages-sidebar { width: 250px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: width 0.3s ease; }
+  .messages-sidebar.full-width { width: 100%; border-right: none; }
   .messages-sidebar-title { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; padding: 1rem; border-bottom: 1px solid var(--border); }
   .messages-friends-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
   .messages-empty { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--muted); padding: 1rem; text-align: center; }
@@ -170,6 +171,8 @@
   .char-leg-ui { width: 20px; height: 50px; background: #0000ff; border: 1px solid #0000cc; }
   .messages-friend-name { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--text); }
   .messages-chat { flex: 1; display: flex; flex-direction: column; }
+  .messages-chat.hidden { display: none; }
+  .chat-warning { background: var(--red-dim); color: var(--red); padding: 0.6rem; text-align: center; font-family: 'DM Mono', monospace; font-size: 0.75rem; border-bottom: 1px solid var(--border); display: none; }
   .messages-chat-header { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--muted); padding: 1rem; border-bottom: 1px solid var(--border); background: var(--surface); }
   .messages-chat-messages { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.8rem; }
   .message-item { display: flex; gap: 0.5rem; }
@@ -178,6 +181,8 @@
   .message-item.sent .message-bubble { background: var(--red); color: white; }
   .message-item.received .message-bubble { background: var(--tag); color: var(--text); }
   .messages-chat-input { display: flex; gap: 0.5rem; padding: 1rem; border-top: 1px solid var(--border); background: var(--surface); }
+  .messages-chat-input.restricted { cursor: not-allowed !important; opacity: 0.6; }
+  .messages-chat-input.restricted * { pointer-events: none; }
   .messages-chat-input input { flex: 1; padding: 0.6rem 0.9rem; background: #0f0f0f; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; outline: none; }
   .messages-chat-input input:focus { border-color: var(--red); }
   .messages-chat-input button { padding: 0.6rem 1rem; background: var(--red); color: white; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; transition: opacity 0.15s; }
@@ -327,7 +332,8 @@
           <div class="messages-sidebar-title">Friends</div>
           <div class="messages-friends-list" id="messages-friends-list"><div class="messages-empty">No friends to message.</div></div>
         </div>
-        <div class="messages-chat">
+        <div class="messages-chat hidden">
+          <div class="chat-warning" id="messages-chat-warning"></div>
           <div class="messages-chat-header" id="messages-chat-header">Select a friend to start chatting</div>
           <div class="messages-chat-messages" id="messages-chat-messages"></div>
           <div class="messages-chat-input">
@@ -614,7 +620,7 @@ async function renderMessagesSidebar() {
   const list = document.getElementById('messages-friends-list');
   const friends = await getFriendships();
   list.innerHTML = '';
-  if (friends.length === 0) { list.innerHTML = '<div class="messages-empty">No friends to message.</div>'; return; }
+  if (friends.length === 0) { list.innerHTML = '<div class="messages-empty">Add a friend to start chatting!</div>'; return; }
   const profiles = await batchGetProfiles(friends);
   profiles.forEach((p, i) => {
     const email = friends[i];
@@ -855,7 +861,8 @@ async function doRegister() {
     }
 
   } catch (e) {
-    if (e.code === 'auth/email-already-in-use')    regErr.textContent = 'That email is already registered.';
+    if (e.code === 'unavailable') regErr.textContent = 'Network error: Cannot reach the server. Please check your internet.';
+    else if (e.code === 'auth/email-already-in-use')    regErr.textContent = 'That email is already registered.';
     else if (e.code === 'auth/invalid-email')       regErr.textContent = 'Invalid email address.';
     else if (e.code === 'auth/weak-password')       regErr.textContent = 'Password is too weak (min 6 chars).';
     else if (e.code === 'permission-denied' || (e.message && e.message.includes('permission')))
@@ -888,7 +895,8 @@ async function doLogin() {
     currentUsername = cred.user.displayName || cred.user.email.split('@')[0];
     await loadUserData(); enterHub();
   } catch (e) {
-    if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') loginErr.textContent = 'Wrong password.';
+    if (e.code === 'unavailable') loginErr.textContent = 'Network error: Server unreachable.';
+    else if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') loginErr.textContent = 'Wrong password.';
     else if (e.code === 'auth/user-not-found') loginErr.textContent = 'No account with that email.';
     else loginErr.textContent = e.message || 'Login failed.';
   }
